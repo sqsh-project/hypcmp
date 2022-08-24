@@ -1,13 +1,17 @@
 name = "duplicate"
-output = "duplicate.json" # will add to the hyperfine-params "--export-json", "<output>"
+output = "duplicate.json"
 hyperfine_params = [
     "hyperfine", "--runs", "5", "-N",
-    "-L", "ifile", "Cargo.toml,Cargo.lock",
+    "-L", "ifile", "Cargo.toml,README.md",
     "-L", "ofile", "/tmp/test.raw",
 ]
 
-[run.1]
-hashes = ["sdfafs", "asdfas"]
+[run.past]
+hashes = ["master", "asdfas"] # can be hash, tag or branch
+command_params = ["sqsh-cli", "duplicate", "--input", "{ifile}", "--output", "{ofile}"]
+
+[run.reference]
+hashes = ["sdfafs"]
 command_params = ["sqsh-cli", "duplicate", "--input", "{ifile}", "--output", "{ofile}"]
 
 [run.control]

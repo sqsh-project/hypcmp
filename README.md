@@ -12,3 +12,6 @@ Based on this, the performance can be analysed.
    with `hyperfine` with `hyperfine-parameters` and the `command-parameters`
    and save it as a JSON file.
 3. Analyse and plot the JSON output using common plotting libraries.
+
+> The output of each run will be written to a temporary directory.
+> These will then be merged to a single json document.

@@ -15,6 +15,8 @@ fn main() {
     println!("{b:?}");
     let d = c.to_cmd_string();
     println!("{d:?}");
+    let f = PCommand::from(c.run.get("past").unwrap());
+    println!("{f:?}");
 }
 
 #[derive(Deserialize, Debug)]
@@ -70,5 +72,19 @@ impl Command for ExeCommand {
             .collect();
         cmd.args(vec);
         cmd
+    }
+}
+
+impl From<&ExeCommand> for PCommand{
+    fn from(cmd: &ExeCommand) -> Self {
+        let mut result = PCommand::new(cmd.command_params[0].clone());
+        let vec: Vec<&str> = cmd
+            .command_params
+            .iter()
+            .skip(1)
+            .map(|x| x.as_str())
+            .collect();
+        result.args(vec);
+        result
     }
 }

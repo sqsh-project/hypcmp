@@ -33,7 +33,7 @@ trait Command {
 impl Command for Benchmark {
     fn to_cmd_string(&self) -> String {
         let cmd = self.to_cmd();
-        format!("{:?}", cmd).replace("\"", "")
+        format!("{:?}", cmd).replace('"', "")
     }
     fn to_cmd(&self) -> PCommand {
         let mut cmd = PCommand::new(self.hyperfine_params[0].clone());
@@ -58,7 +58,7 @@ struct ExeCommand {
 impl Command for ExeCommand {
     fn to_cmd_string(&self) -> String {
         let cmd = self.to_cmd();
-        format!("{:?}", cmd).replace("\"", "")
+        format!("{:?}", cmd).replace('"', "")
     }
     fn to_cmd(&self) -> PCommand {
         let mut cmd = PCommand::new(self.command_params[0].clone());

@@ -19,30 +19,26 @@ Based on this, the performance can be analysed.
 ## Configuration
 
 ```toml
-label = "benchmark"
-output = "benchmark.json"
-hyperfine_params = [
-   "--runs", "5",
-   "--warmup", "3",
-   "--parameter-list", "ifile", "Cargo.toml,README.md",
-   "--parameter-list", "ofile", "/tmp/test.raw",
+label = "duplicate"
+output = "duplicate.json"
+hyperfine_params = [  # common hyperfine parameters for all runs
+    "--runs", "5",
+    "--warmup", "3",
+    "--parameter-list", "ifile", "Cargo.toml,README.md",
+    "--parameter-list", "ofile", "/tmp/test.raw",
 ]
 
-[run.past_versions]
+[run.past]
 commits = ["master", "asdfas"] # can be hash, tag or branch
 command = "sqsh-cli duplicate --input {ifile} --output {ofile}"
-hyperfine_params = [
-   "--setup", "cargo install --path sqsh-cli",
-   "--cleanup", "rm {ofile}"
-]
+setup = "cargo install --release --path ."
+cleanup = "rm {ofile}"
+# prepare = "" maybe empty cache
 
 [run.reference]
 commits = ["sdfafs"]
 command = "sqsh-cli duplicate --input {ifile} --output {ofile}"
-hyperfine_params = [
-   "--setup", "cargo install --path sqsh-cli",
-   "--cleanup", "rm {ofile}"
-]
+setup = "cargo install --release --path ."
 
 [run.control]
 command = "dd if={ifile} of={ofile}"

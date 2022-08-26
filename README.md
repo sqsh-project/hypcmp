@@ -15,3 +15,37 @@ Based on this, the performance can be analysed.
 
 > The output of each run will be written to a temporary directory.
 > These will then be merged to a single json document.
+
+## Configuration
+
+```toml
+label = "benchmark"
+output = "benchmark.json"
+hyperfine_params = [
+   "--runs", "5",
+   "--warmup", "3",
+   "--parameter-list", "ifile", "Cargo.toml,README.md",
+   "--parameter-list", "ofile", "/tmp/test.raw",
+]
+
+[run.past_versions]
+hashes = ["master", "asdfas"] # can be hash, tag or branch
+command_params = ["sqsh-cli", "duplicate", "--input", "{ifile}", "--output", "{ofile}"]
+hyperfine_params = [
+   "--setup", "cargo install --path sqsh-cli",
+   "--cleanup", "rm {ofile}"
+]
+
+[run.reference]
+hashes = ["sdfafs"]
+command_params = ["sqsh-cli", "duplicate", "--input", "{ifile}", "--output", "{ofile}"]
+hyperfine_params = [
+   "--setup", "cargo install --path sqsh-cli",
+   "--cleanup", "rm {ofile}"
+]
+
+[run.control]
+command_params = ["dd", "if={ifile}", "of={ofile}"]
+```
+<!--
+hyperfine --runs 50 -L commit e385914,master -L ifile Cargo.toml,Cargo.lock -L ofile /tmp/test.raw "dd if={ifile} of={ofile}" --warmup 3 --export-json /tmp/log.json --setup "git checkout {commit} && cargo install --path sqsh-cli" -n "{commit}-{ifile}-{ofile}" -->

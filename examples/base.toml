@@ -1,4 +1,4 @@
-name = "duplicate"
+label = "duplicate"
 output = "duplicate.json"
 hyperfine_params = [
     "hyperfine", "--runs", "5", "-N",

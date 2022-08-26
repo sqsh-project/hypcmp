@@ -10,3 +10,4 @@ publish = false
 toml = "0.5.*"
 tempfile = "3.*"
 serde = { version = "1.*", features = ["derive"] }
+clap = { version = "3.*", features = ["derive"] }

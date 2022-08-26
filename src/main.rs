@@ -1,10 +1,13 @@
 #![allow(dead_code)]
 use serde::Deserialize;
 use std::{collections::HashMap, fs::File, io::Read, process::Command as PCommand};
+mod cli;
+use clap::Parser;
 
 fn main() {
-    let filename = "./sqsh-benchmark/examples/base.toml";
-    let mut f = File::open(filename).unwrap();
+    let config = cli::Cli::parse();
+    println!("{config:?}");
+    let mut f = File::open(config.config).unwrap();
     let mut content = String::new();
     f.read_to_string(&mut content).unwrap();
     let value = content.as_str();
@@ -15,13 +18,11 @@ fn main() {
     println!("{b:?}");
     let d = c.to_cmd_string();
     println!("{d:?}");
-    let f = PCommand::from(c.run.get("past").unwrap());
-    println!("{f:?}");
 }
 
 #[derive(Deserialize, Debug)]
 struct Benchmark {
-    name: String,
+    label: String,
     output: String,
     hyperfine_params: Vec<String>,
     run: HashMap<String, ExeCommand>,
@@ -72,19 +73,5 @@ impl Command for ExeCommand {
             .collect();
         cmd.args(vec);
         cmd
-    }
-}
-
-impl From<&ExeCommand> for PCommand{
-    fn from(cmd: &ExeCommand) -> Self {
-        let mut result = PCommand::new(cmd.command_params[0].clone());
-        let vec: Vec<&str> = cmd
-            .command_params
-            .iter()
-            .skip(1)
-            .map(|x| x.as_str())
-            .collect();
-        result.args(vec);
-        result
     }
 }

@@ -25,53 +25,15 @@ struct Benchmark {
     label: String,
     output: String,
     hyperfine_params: Vec<String>,
-    run: HashMap<String, ExeCommand>,
+    run: HashMap<String, Run>,
 }
 
-trait Command {
-    fn to_cmd_string(&self) -> String;
-    fn to_cmd(&self) -> PCommand;
-}
-
-impl Command for Benchmark {
-    fn to_cmd_string(&self) -> String {
-        let cmd = self.to_cmd();
-        format!("{:?}", cmd).replace('"', "")
-    }
-    fn to_cmd(&self) -> PCommand {
-        let mut cmd = PCommand::new(self.hyperfine_params[0].clone());
-        let vec: Vec<&str> = self
-            .hyperfine_params
-            .iter()
-            .skip(1)
-            .map(|x| x.as_str())
-            .collect();
-        cmd.args(vec);
-        // cmd.args(["--export-os", self.output.as_str()]);
-        cmd
-    }
-}
 
 #[derive(Deserialize, Debug)]
-struct ExeCommand {
-    command_params: Vec<String>,
-    hashes: Option<Vec<String>>,
-}
-
-impl Command for ExeCommand {
-    fn to_cmd_string(&self) -> String {
-        let cmd = self.to_cmd();
-        format!("{:?}", cmd).replace('"', "")
-    }
-    fn to_cmd(&self) -> PCommand {
-        let mut cmd = PCommand::new(self.command_params[0].clone());
-        let vec: Vec<&str> = self
-            .command_params
-            .iter()
-            .skip(1)
-            .map(|x| x.as_str())
-            .collect();
-        cmd.args(vec);
-        cmd
-    }
+struct Run {
+    command: String,
+    commits: Option<Vec<String>>,
+    cleanup: Option<String>,
+    prepare: Option<String>,
+    setup: Option<String>,
 }

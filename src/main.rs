@@ -20,12 +20,14 @@ fn main() {
         println!("Subcommand Settings: {k:?}");
         println!("{:?}", v.to_hyperfine_params())
     }
+    let mut tmp_outputs: Vec<String> = Vec::new();
     for (k, v) in c.run.iter() {
         let mut cmd = Command::new("hyperfine");
         cmd.args(c.to_hyperfine_params());
 
         let mut json = vec!["--export-json".to_string()];
         let output = format!("/tmp/{k:?}.json").replace('"', "");
+        tmp_outputs.push(output.clone());
         json.push(output);
         cmd.args(json);
 
@@ -33,6 +35,24 @@ fn main() {
         println!("CMD '{k:?}': {cmd:?}");
         cmd.status().expect("Failed");  // Execute command back to back
     }
+    merge_json_files(&tmp_outputs);
+}
+
+fn merge_json_files(files: &Vec<String>) {
+    let mut f = File::open(files[0].clone()).unwrap();
+    let mut buf = String::new();
+    f.read_to_string(&mut buf).unwrap();
+    let mut result: serde_json::Value = serde_json::from_str(buf.as_str()).unwrap();
+    let result_list = result["results"].as_array_mut().unwrap();
+    for file in files.iter().skip(1) {
+        let mut f = File::open(file).unwrap();
+        let mut buf = String::new();
+        f.read_to_string(&mut buf).unwrap();
+        let v: serde_json::Value = serde_json::from_str(buf.as_str()).unwrap();
+        // println!("{:?} {:?}", v["results"][0]["command"], v["results"][0]["median"]);
+        result_list.push(v);
+    }
+    println!("{:?}", serde_json::to_string_pretty(&result));
 }
 
 #[derive(Deserialize, Debug)]

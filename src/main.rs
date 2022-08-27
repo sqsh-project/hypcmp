@@ -14,7 +14,10 @@ fn main() {
     let value = content.as_str();
 
     let c: Benchmark = toml::from_str(value).unwrap();
-    for (_, v) in c.run {
+    println!("Common Settings:");
+    println!("{:?}", c.to_hyperfine_params());
+    for (k, v) in c.run {
+        println!("Subcommand Settings: {k:?}");
         println!("{:?}", v.to_hyperfine_params())
     }
 }
@@ -25,6 +28,15 @@ struct Benchmark {
     output: String,
     hyperfine_params: Vec<String>,
     run: HashMap<String, Run>,
+}
+
+impl Benchmark {
+    fn to_hyperfine_params(&self) -> Vec<String> {
+        let mut result = self.hyperfine_params.clone();
+        result.push("--export-json".to_string());
+        result.push(self.output.clone());
+        result
+    }
 }
 
 #[derive(Deserialize, Debug)]

@@ -1,0 +1,16 @@
+label = "duplicate"
+output = "duplicate.json"
+hyperfine_params = [  # common hyperfine parameters for all runs
+    "--runs", "500",
+    "--warmup", "3",
+    "--style", "none",
+]
+
+[run.dd]
+command = "dd if=Cargo.toml of=/tmp/Cargo.toml.dd"
+
+[run.cp]
+command = "cp Cargo.toml /tmp/Cargo.toml.cp"
+
+[run.rsync]
+command = "rsync -a Cargo.toml /tmp/Cargo.toml.rsync"

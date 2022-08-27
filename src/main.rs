@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use serde::Deserialize;
-use std::{collections::HashMap, fs::File, io::Read};
+use std::{collections::HashMap, fs::File, io::Read, process::Command};
 mod cli;
 use clap::Parser;
 
@@ -16,9 +16,22 @@ fn main() {
     let c: Benchmark = toml::from_str(value).unwrap();
     println!("Common Settings:");
     println!("{:?}", c.to_hyperfine_params());
-    for (k, v) in c.run {
+    for (k, v) in c.run.iter() {
         println!("Subcommand Settings: {k:?}");
         println!("{:?}", v.to_hyperfine_params())
+    }
+    for (k, v) in c.run.iter() {
+        let mut cmd = Command::new("hyperfine");
+        cmd.args(c.to_hyperfine_params());
+
+        let mut json = vec!["--export-json".to_string()];
+        let output = format!("/tmp/{k:?}.json").replace('"', "");
+        json.push(output);
+        cmd.args(json);
+
+        cmd.args(v.to_hyperfine_params());
+        println!("CMD '{k:?}': {cmd:?}");
+        cmd.status().expect("Failed");  // Execute command back to back
     }
 }
 
@@ -27,7 +40,7 @@ struct Benchmark {
     label: String,
     output: String,
     hyperfine_params: Vec<String>,
-    run: HashMap<String, Run>,
+    run: Box<HashMap<String, Run>>,
 }
 
 impl Benchmark {

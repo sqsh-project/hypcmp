@@ -1,7 +1,7 @@
 label = "duplicate"
 output = "duplicate.json"
 hyperfine_params = [  # common hyperfine parameters for all runs
-    "--runs", "500",
+    "--runs", "5",
     "--warmup", "3",
     "--style", "none",
 ]

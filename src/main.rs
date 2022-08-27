@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use serde::Deserialize;
-use std::{collections::HashMap, fs::File, io::Read, process::Command};
+use std::{collections::HashMap, fs::File, io::{Read, BufWriter, Write}, process::Command};
 mod cli;
 use clap::Parser;
 
@@ -35,10 +35,16 @@ fn main() {
         println!("CMD '{k:?}': {cmd:?}");
         cmd.status().expect("Failed");  // Execute command back to back
     }
-    merge_json_files(&tmp_outputs);
+    let json = merge_json_files(&tmp_outputs);
+    let json_pp = serde_json::to_string_pretty(&json).unwrap();
+    let f = File::create(c.output).unwrap();
+    let mut bw = BufWriter::new(f);
+    bw.write_all(&json_pp.as_bytes()).unwrap();
+    bw.flush().unwrap();
+    println!("Finished!");
 }
 
-fn merge_json_files(files: &Vec<String>) {
+fn merge_json_files(files: &Vec<String>) -> serde_json::Value {
     let mut f = File::open(files[0].clone()).unwrap();
     let mut buf = String::new();
     f.read_to_string(&mut buf).unwrap();
@@ -53,6 +59,7 @@ fn merge_json_files(files: &Vec<String>) {
         result_list.push(v);
     }
     println!("{:?}", serde_json::to_string_pretty(&result));
+    result
 }
 
 #[derive(Deserialize, Debug)]

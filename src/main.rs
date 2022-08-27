@@ -32,9 +32,9 @@ struct Benchmark {
 
 impl Benchmark {
     fn to_hyperfine_params(&self) -> Vec<String> {
-        let mut result = self.hyperfine_params.clone();
-        result.push("--export-json".to_string());
-        result.push(self.output.clone());
+        let result = self.hyperfine_params.clone();
+        // result.push("--export-json".to_string());
+        // result.push(self.output.clone());
         result
     }
 }

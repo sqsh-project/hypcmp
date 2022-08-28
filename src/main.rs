@@ -1,65 +1,80 @@
 #![allow(dead_code)]
 use serde::Deserialize;
-use std::{collections::HashMap, fs::File, io::{Read, BufWriter, Write}, process::Command};
+use serde_json::Value;
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    fs::File,
+    io::{BufWriter, Read, Write},
+    path::PathBuf,
+    process::Command,
+};
+use tempfile::TempDir;
 mod cli;
 use clap::Parser;
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let config = cli::Cli::parse();
     println!("{config:?}");
 
-    let mut f = File::open(config.config).unwrap();
-    let mut content = String::new();
-    f.read_to_string(&mut content).unwrap();
-    let value = content.as_str();
+    let c = Benchmark::from_config(config.config)?;
+    println!("{c}");
 
-    let c: Benchmark = toml::from_str(value).unwrap();
-    println!("Common Settings:");
-    println!("{:?}", c.to_hyperfine_params());
-    for (k, v) in c.run.iter() {
-        println!("Subcommand Settings: {k:?}");
-        println!("{:?}", v.to_hyperfine_params())
-    }
-    let mut tmp_outputs: Vec<String> = Vec::new();
-    for (k, v) in c.run.iter() {
+    let dir = tempfile::tempdir()?;
+    let mut files_to_be_merged: Vec<String> = Vec::new();
+
+    for (label, run) in c.run.iter() {
         let mut cmd = Command::new("hyperfine");
         cmd.args(c.to_hyperfine_params());
 
         let mut json = vec!["--export-json".to_string()];
-        let output = format!("/tmp/{k:?}.json").replace('"', "");
-        tmp_outputs.push(output.clone());
-        json.push(output);
+        let mut filename = label.clone();
+        filename.push_str(".json");
+        let output = dir.path().join(filename).display().to_string();
+        json.push(output.clone());
         cmd.args(json);
 
-        cmd.args(v.to_hyperfine_params());
-        println!("CMD '{k:?}': {cmd:?}");
-        cmd.status().expect("Failed");  // Execute command back to back
+        cmd.args(run.to_hyperfine_params());
+        println!("{cmd:?}");
+        cmd.status().expect("Failed"); // Execute command back to back
+        files_to_be_merged.push(output);
     }
-    let json = merge_json_files(&tmp_outputs);
-    let json_pp = serde_json::to_string_pretty(&json).unwrap();
-    let f = File::create(c.output).unwrap();
-    let mut bw = BufWriter::new(f);
-    bw.write_all(&json_pp.as_bytes()).unwrap();
-    bw.flush().unwrap();
-    println!("Finished!");
+    let json = merge_json_files(&files_to_be_merged)?;
+    write_json_to_disk(json, &c.output)?;
+    cleanup(files_to_be_merged, dir)?;
+    Ok(())
 }
 
-fn merge_json_files(files: &Vec<String>) -> serde_json::Value {
-    let mut f = File::open(files[0].clone()).unwrap();
+fn cleanup(tempfilelist: Vec<String>, dir: TempDir) -> std::io::Result<()> {
+    for file in tempfilelist {
+        drop(file)
+    }
+    dir.close()
+}
+
+fn write_json_to_disk(json: Value, output: &String) -> std::io::Result<()> {
+    let json_pp = serde_json::to_string_pretty(&json)?;
+    let f = File::create(output)?;
+    let mut bw = BufWriter::new(f);
+    bw.write_all(&json_pp.as_bytes())?;
+    bw.flush()?;
+    Ok(())
+}
+
+fn merge_json_files(files: &Vec<String>) -> std::io::Result<serde_json::Value> {
+    let mut f = File::open(files[0].clone())?;
     let mut buf = String::new();
-    f.read_to_string(&mut buf).unwrap();
-    let mut result: serde_json::Value = serde_json::from_str(buf.as_str()).unwrap();
+    f.read_to_string(&mut buf)?;
+    let mut result: serde_json::Value = serde_json::from_str(buf.as_str())?;
     let result_list = result["results"].as_array_mut().unwrap();
     for file in files.iter().skip(1) {
-        let mut f = File::open(file).unwrap();
+        let mut f = File::open(file)?;
         let mut buf = String::new();
-        f.read_to_string(&mut buf).unwrap();
-        let v: serde_json::Value = serde_json::from_str(buf.as_str()).unwrap();
-        // println!("{:?} {:?}", v["results"][0]["command"], v["results"][0]["median"]);
-        result_list.push(v);
+        f.read_to_string(&mut buf)?;
+        let val: serde_json::Value = serde_json::from_str(buf.as_str())?;
+        result_list.push(val);
     }
-    println!("{:?}", serde_json::to_string_pretty(&result));
-    result
+    Ok(result)
 }
 
 #[derive(Deserialize, Debug)]
@@ -70,11 +85,45 @@ struct Benchmark {
     run: Box<HashMap<String, Run>>,
 }
 
+impl Display for Benchmark {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Common Settings:\n")?;
+        write!(f, "{:?}\n", self.to_hyperfine_params())?;
+        for (k, v) in self.run.iter() {
+            write!(f, "Subcommand Settings: {k:?}\n")?;
+            write!(f, "{:?}\n", v.to_hyperfine_params())?;
+        }
+        write!(f, "\n")
+    }
+}
+
 impl Benchmark {
+    fn from_config(config: PathBuf) -> std::io::Result<Self> {
+        let mut f = File::open(config)?;
+        let mut content = String::new();
+        f.read_to_string(&mut content)?;
+        let value = content.as_str();
+        let result = toml::from_str(value)?;
+        Ok(result)
+    }
     fn to_hyperfine_params(&self) -> Vec<String> {
         let result = self.hyperfine_params.clone();
-        // result.push("--export-json".to_string());
-        // result.push(self.output.clone());
+        result
+    }
+    fn temporary_files(&self, dir: &TempDir) -> Vec<String> {
+        let result = self
+            .run
+            .keys()
+            .map(|k| {
+                dir.path()
+                    .join({
+                        k.clone().push_str(".json");
+                        k
+                    })
+                    .display()
+                    .to_string()
+            })
+            .collect();
         result
     }
 }

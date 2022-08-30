@@ -1,22 +1,22 @@
+label = "duplicate"
 output = "duplicate.json"
 hyperfine_params = [  # common hyperfine parameters for all runs
     "--runs", "5",
     "--warmup", "3",
-    "--parameter-list", "ifile", "Cargo.toml,README.md",
+    "--parameter-list", "ifile", "Cargo.toml",
     "--parameter-list", "ofile", "/tmp/test.raw",
 ]
 
 [run.past]
-commits = ["master", "asdfas"]  # can be hash, tag or branch
-command = "sqsh-cli duplicate --input {ifile} --output {ofile}"
-setup = "cargo install --release --path ."
+commits = ["master"] # can be hash, tag or branch
+command = "dd if={ifile} of={ofile}"
+setup = "cargo install --path sqsh-benchmark"
 cleanup = "rm {ofile}"
-prepare = "sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
+# prepare = "" maybe empty cache
 
 [run.reference]
-commits = ["sdfafs"]
-command = "sqsh-cli duplicate --input {ifile} --output {ofile}"
-setup = "cargo install --release --path ."
+command = "sqsh-cli duplicate {ifile} {ofile}"
+setup = "cargo install --path sqsh-benchmark"
 
 [run.control]
 command = "dd if={ifile} of={ofile}"

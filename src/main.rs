@@ -56,12 +56,12 @@ fn write_json_to_disk(json: Value, output: &String) -> std::io::Result<()> {
     let json_pp = serde_json::to_string_pretty(&json)?;
     let f = File::create(output)?;
     let mut bw = BufWriter::new(f);
-    bw.write_all(&json_pp.as_bytes())?;
+    bw.write_all(json_pp.as_bytes())?;
     bw.flush()?;
     Ok(())
 }
 
-fn merge_json_files(files: &Vec<String>) -> std::io::Result<serde_json::Value> {
+fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::Value> {
     let mut f = File::open(files[0].clone())?;
     let mut buf = String::new();
     f.read_to_string(&mut buf)?;
@@ -82,18 +82,18 @@ struct Benchmark {
     label: String,
     output: String,
     hyperfine_params: Vec<String>,
-    run: Box<HashMap<String, Run>>,
+    run: HashMap<String, Run>,
 }
 
 impl Display for Benchmark {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Common Settings:\n")?;
-        write!(f, "{:?}\n", self.to_hyperfine_params())?;
+        writeln!(f, "Common Settings:")?;
+        writeln!(f, "{:?}", self.to_hyperfine_params())?;
         for (k, v) in self.run.iter() {
-            write!(f, "Subcommand Settings: {k:?}\n")?;
-            write!(f, "{:?}\n", v.to_hyperfine_params())?;
+            writeln!(f, "Subcommand Settings: {k:?}")?;
+            writeln!(f, "{:?}", v.to_hyperfine_params())?;
         }
-        write!(f, "\n")
+        writeln!(f)
     }
 }
 
@@ -107,8 +107,7 @@ impl Benchmark {
         Ok(result)
     }
     fn to_hyperfine_params(&self) -> Vec<String> {
-        let result = self.hyperfine_params.clone();
-        result
+        self.hyperfine_params.clone()
     }
     fn temporary_files(&self, dir: &TempDir) -> Vec<String> {
         let result = self

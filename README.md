@@ -5,18 +5,30 @@ is being read for [`hyperfine`](https://github.com/sharkdp/hyperfine)
 and then executed. A JSON file ist output.
 Based on this, the performance can be analysed.
 
-0. Define a `config.toml` document like in the [examples](./examples/) folder.
-1. Read the configuration file.
-2. For each `commit` execute
-   a [subcommand](https://doc.rust-lang.org/std/process/struct.Command.html)
-   with `hyperfine` with `hyperfine-parameters` and the `command-parameters`
-   and save it as a JSON file.
-3. Analyse and plot the JSON output using common plotting libraries.
-
-> The output of each run will be written to a temporary directory.
-> These will then be merged to a single json document.
-
 ## Configuration
+
+An example:
+
+```toml
+label = "duplicate"
+output = "duplicate.json"
+hyperfine_params = [  # common hyperfine parameters for all runs
+    "--runs", "5",
+    "--warmup", "3",
+    "--style", "none",
+]
+
+[run.dd]
+command = "dd if=Cargo.toml of=/tmp/Cargo.toml.dd"
+
+[run.cp]
+command = "cp Cargo.toml /tmp/Cargo.toml.cp"
+
+[run.rsync]
+command = "rsync -a Cargo.toml /tmp/Cargo.toml.rsync"
+```
+
+A more complicated example:
 
 ```toml
 label = "duplicate"
@@ -29,11 +41,11 @@ hyperfine_params = [  # common hyperfine parameters for all runs
 ]
 
 [run.past]
-commits = ["master", "asdfas"] # can be hash, tag or branch
+commits = ["master", "asdfas"]  # can be hash, tag or branch
 command = "sqsh-cli duplicate --input {ifile} --output {ofile}"
 setup = "cargo install --release --path ."
 cleanup = "rm {ofile}"
-# prepare = "" maybe empty cache
+prepare = "sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
 
 [run.reference]
 commits = ["sdfafs"]
@@ -43,5 +55,3 @@ setup = "cargo install --release --path ."
 [run.control]
 command = "dd if={ifile} of={ofile}"
 ```
-<!--
-hyperfine --runs 50 -L commit e385914,master -L ifile Cargo.toml,Cargo.lock -L ofile /tmp/test.raw "dd if={ifile} of={ofile}" --warmup 3 --export-json /tmp/log.json --setup "git checkout {commit} && cargo install --path sqsh-cli" -n "{commit}-{ifile}-{ofile}" -->

@@ -8,11 +8,11 @@ hyperfine_params = [  # common hyperfine parameters for all runs
 ]
 
 [run.past]
-commits = ["master", "asdfas"] # can be hash, tag or branch
+commits = ["master", "asdfas"]  # can be hash, tag or branch
 command = "sqsh-cli duplicate --input {ifile} --output {ofile}"
 setup = "cargo install --release --path ."
 cleanup = "rm {ofile}"
-# prepare = "" maybe empty cache
+prepare = "sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
 
 [run.reference]
 commits = ["sdfafs"]

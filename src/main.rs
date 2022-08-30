@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use serde::Deserialize;
 use serde_json::Value;
 use std::{
@@ -79,7 +78,6 @@ fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::Value> {
 
 #[derive(Deserialize, Debug)]
 struct Benchmark {
-    label: String,
     output: String,
     hyperfine_params: Vec<String>,
     run: HashMap<String, Run>,
@@ -108,22 +106,6 @@ impl Benchmark {
     }
     fn to_hyperfine_params(&self) -> Vec<String> {
         self.hyperfine_params.clone()
-    }
-    fn temporary_files(&self, dir: &TempDir) -> Vec<String> {
-        let result = self
-            .run
-            .keys()
-            .map(|k| {
-                dir.path()
-                    .join({
-                        k.clone().push_str(".json");
-                        k
-                    })
-                    .display()
-                    .to_string()
-            })
-            .collect();
-        result
     }
 }
 

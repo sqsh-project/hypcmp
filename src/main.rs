@@ -70,8 +70,9 @@ fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::Value> {
         let mut f = File::open(file)?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)?;
-        let val: serde_json::Value = serde_json::from_str(buf.as_str())?;
-        result_list.push(val);
+        let mut val: serde_json::Value = serde_json::from_str(buf.as_str())?;
+        let r = val["results"].as_array_mut().unwrap();
+        result_list.append(r);
     }
     Ok(result)
 }

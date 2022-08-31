@@ -23,10 +23,7 @@ fn main() -> std::io::Result<()> {
 
     let dir = tempfile::tempdir()?;
     let mut files_to_be_merged: Vec<String> = Vec::new();
-    let mut current_branch = get_current_branch()?;
-    if current_branch == "HEAD" {
-        current_branch = get_current_commit()?;
-    }
+    let current_branch = get_current_branch_or_id()?;
 
     for (label, run) in c.run.iter() {
         let mut cmd = Command::new("hyperfine");
@@ -69,7 +66,10 @@ fn is_git_dirty() -> std::io::Result<()> {
 }
 
 fn checkout(commit: String) -> std::io::Result<()> {
-    Command::new("git").arg("checkout").arg(commit).status()?;
+    let id = get_current_branch_or_id()?;
+    if id != commit {
+        Command::new("git").arg("checkout").arg(commit).status()?;
+    }
     Ok(()) // return HEAD is detached
 }
 
@@ -80,6 +80,15 @@ fn get_current_branch() -> std::io::Result<String> {
         .arg("HEAD")
         .output()?;
     Ok(format!("{r:?}")) // return HEAD is detached
+}
+
+fn get_current_branch_or_id() -> std::io::Result<String> {
+    let br = get_current_branch()?;
+    if br == "HEAD" {
+        Ok(get_current_commit()?)
+    } else {
+        Ok(br)
+    }
 }
 
 fn get_current_commit() -> std::io::Result<String> {

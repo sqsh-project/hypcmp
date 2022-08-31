@@ -14,10 +14,10 @@ use clap::Parser;
 
 fn main() -> std::io::Result<()> {
     let config = cli::Cli::parse();
-    println!("{config:?}");
+    // println!("{config:?}");
 
     let c = Benchmark::from_config(config.config)?;
-    println!("{c}");
+    // println!("{c}");
 
     let dir = tempfile::tempdir()?;
     let mut files_to_be_merged: Vec<String> = Vec::new();
@@ -34,8 +34,8 @@ fn main() -> std::io::Result<()> {
         cmd.args(json);
 
         cmd.args(run.to_hyperfine_params());
-        println!("{cmd:?}");
-        cmd.status().expect("Failed"); // Execute command back to back
+        println!("Running: {cmd:?}");
+        cmd.output().expect("Failed"); // TODO: Catch possible errors
         files_to_be_merged.push(output);
     }
     let json = merge_json_files(&files_to_be_merged)?;

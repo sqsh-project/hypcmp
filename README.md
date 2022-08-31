@@ -28,7 +28,6 @@ command = "rsync -a Cargo.toml /tmp/Cargo.toml.rsync"
 A more complicated example:
 
 ```toml
-label = "duplicate"
 output = "duplicate.json"
 hyperfine_params = [  # common hyperfine parameters for all runs
     "--runs", "5",

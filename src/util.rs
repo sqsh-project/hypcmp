@@ -24,7 +24,7 @@ pub(crate) fn is_git_dirty() -> std::io::Result<()> {
 pub(crate) fn checkout(commit: String) -> std::io::Result<()> {
     let id = get_current_branch_or_id()?;
     if id != commit {
-        Command::new("git").arg("checkout").arg(commit).status()?;
+        Command::new("git").arg("checkout").arg(commit).arg("--quiet").status()?;
     }
     Ok(()) // return HEAD is detached
 }

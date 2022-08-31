@@ -4,7 +4,7 @@ use std::{
     collections::HashMap,
     fmt::Display,
     fs::File,
-    io::{BufWriter, Read, Write},
+    io::{BufWriter, Error, ErrorKind, Read, Write},
     path::PathBuf,
     process::Command,
 };
@@ -15,6 +15,8 @@ use clap::Parser;
 fn main() -> std::io::Result<()> {
     let config = cli::Cli::parse();
     // println!("{config:?}");
+
+    is_git_dirty()?;
 
     let c = Benchmark::from_config(config.config)?;
     // println!("{c}");
@@ -54,6 +56,16 @@ fn cleanup(tempfilelist: Vec<String>, dir: TempDir) -> std::io::Result<()> {
         drop(file)
     }
     dir.close()
+}
+
+fn is_git_dirty() -> std::io::Result<()> {
+    let st = Command::new("git").arg("diff").arg("--quiet").status()?;
+    if st.success() {
+        Ok(())
+    } else {
+        let err = Error::new(ErrorKind::Other, "Git is dirty");
+        Err(err)
+    }
 }
 
 fn checkout(commit: String) -> std::io::Result<()> {

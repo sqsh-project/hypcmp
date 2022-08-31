@@ -21,6 +21,10 @@ fn main() -> std::io::Result<()> {
 
     let dir = tempfile::tempdir()?;
     let mut files_to_be_merged: Vec<String> = Vec::new();
+    let mut current_branch = get_current_branch()?;
+    if current_branch == "HEAD" {
+        current_branch = get_current_commit()?;
+    }
 
     for (label, run) in c.run.iter() {
         let mut cmd = Command::new("hyperfine");
@@ -41,6 +45,7 @@ fn main() -> std::io::Result<()> {
     let json = merge_json_files(&files_to_be_merged)?;
     write_json_to_disk(json, &c.output)?;
     cleanup(files_to_be_merged, dir)?;
+    checkout(current_branch)?;
     Ok(())
 }
 
@@ -49,6 +54,25 @@ fn cleanup(tempfilelist: Vec<String>, dir: TempDir) -> std::io::Result<()> {
         drop(file)
     }
     dir.close()
+}
+
+fn checkout(commit: String) -> std::io::Result<()> {
+    Command::new("git").arg("checkout").arg(commit).status()?;
+    Ok(()) // return HEAD is detached
+}
+
+fn get_current_branch() -> std::io::Result<String> {
+    let r = Command::new("git")
+        .arg("rev-parse")
+        .arg("--abbrev-ref")
+        .arg("HEAD")
+        .output()?;
+    Ok(format!("{r:?}")) // return HEAD is detached
+}
+
+fn get_current_commit() -> std::io::Result<String> {
+    let r = Command::new("git").arg("rev-parse").arg("HEAD").output()?;
+    Ok(format!("{r:?}"))
 }
 
 fn write_json_to_disk(json: Value, output: &String) -> std::io::Result<()> {

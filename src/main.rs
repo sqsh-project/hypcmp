@@ -83,11 +83,23 @@ fn get_current_branch() -> std::io::Result<String> {
 }
 
 fn get_current_branch_or_id() -> std::io::Result<String> {
-    let br = get_current_branch()?;
+    let mut br = get_current_branch()?;
+    trim_newline(&mut br);
     if br == "HEAD" {
-        Ok(get_current_commit()?)
+        br = get_current_commit()?;
+        trim_newline(&mut br);
+        Ok(br)
     } else {
         Ok(br)
+    }
+}
+
+fn trim_newline(s: &mut String) {
+    if s.ends_with('\n') {
+        s.pop();
+        if s.ends_with('\r') {
+            s.pop();
+        }
     }
 }
 

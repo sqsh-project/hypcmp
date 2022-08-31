@@ -1,3 +1,4 @@
+use clap::Parser;
 use serde::Deserialize;
 use serde_json::Value;
 use std::{
@@ -10,7 +11,6 @@ use std::{
 };
 use tempfile::TempDir;
 mod cli;
-use clap::Parser;
 
 fn main() -> std::io::Result<()> {
     let config = cli::Cli::parse();
@@ -24,7 +24,7 @@ fn main() -> std::io::Result<()> {
     let dir = tempfile::tempdir()?;
     let mut files_to_be_merged: Vec<String> = Vec::new();
     let current_branch = get_current_branch_or_id()?;
-
+    // println!("CB: {current_branch:?}");
     for (label, run) in c.run.iter() {
         let mut cmd = Command::new("hyperfine");
         cmd.args(c.to_hyperfine_params());
@@ -78,8 +78,9 @@ fn get_current_branch() -> std::io::Result<String> {
         .arg("rev-parse")
         .arg("--abbrev-ref")
         .arg("HEAD")
-        .output()?;
-    Ok(format!("{r:?}")) // return HEAD is detached
+        .output()?
+        .stdout;
+    Ok(std::str::from_utf8(&r).unwrap().to_string()) // return HEAD is detached
 }
 
 fn get_current_branch_or_id() -> std::io::Result<String> {
@@ -104,8 +105,12 @@ fn trim_newline(s: &mut String) {
 }
 
 fn get_current_commit() -> std::io::Result<String> {
-    let r = Command::new("git").arg("rev-parse").arg("HEAD").output()?;
-    Ok(format!("{r:?}"))
+    let r = Command::new("git")
+        .arg("rev-parse")
+        .arg("HEAD")
+        .output()?
+        .stdout;
+    Ok(std::str::from_utf8(&r).unwrap().to_string()) // return HEAD is detached
 }
 
 fn write_json_to_disk(json: Value, output: &String) -> std::io::Result<()> {

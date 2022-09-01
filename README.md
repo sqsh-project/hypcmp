@@ -39,13 +39,13 @@ hyperfine_params = [  # common hyperfine parameters for all runs
 [run.past]
 commits = ["master"] # can be hash, tag or branch
 command = "dd if={ifile} of={ofile}"
-setup = "cargo install --path sqsh-benchmark"
+setup = "cargo install --path sqsh-cli"
 cleanup = "rm {ofile}"
 # prepare = "" maybe empty cache
 
 [run.reference]
 command = "sqsh-cli duplicate {ifile} {ofile}"
-setup = "cargo install --path sqsh-benchmark"
+setup = "cargo install --path sqsh-cli"
 
 [run.control]
 command = "dd if={ifile} of={ofile}"

@@ -1,4 +1,5 @@
 use clap::Parser;
+use log::{debug, info};
 use std::process::Command;
 
 mod cli;
@@ -6,19 +7,26 @@ mod core;
 mod util;
 
 fn main() -> std::io::Result<()> {
+    env_logger::init();
     let config = cli::Cli::parse();
-    // println!("{config:?}");
+    debug!("Loaded configuration: {config:?}");
 
     util::is_git_dirty()?;
+    debug!("Git state: clean");
 
     let c = core::Benchmark::from_config(config.config)?;
-    // println!("{c}");
+    debug!("Benchmark Setup: {c:?}");
 
     let dir = tempfile::tempdir()?;
+    debug!("Temporary Directory: {dir:?}");
+
     let mut files_to_be_merged: Vec<String> = Vec::new();
     let current_branch = util::get_current_branch_or_id()?;
-    // println!("CB: {current_branch:?}");
+    info!("Current branch is: {current_branch:?}");
+
     for (label, run) in c.run.iter() {
+        debug!("Run: {run:?}");
+
         let mut cmd = Command::new("hyperfine");
         cmd.args(c.to_hyperfine_params());
 
@@ -30,8 +38,9 @@ fn main() -> std::io::Result<()> {
         cmd.args(json);
 
         cmd.args(run.to_hyperfine_params());
-        println!("Running: {cmd:?}");
+        info!("Running: {cmd:?}");
         cmd.output()?; // TODO: Catch possible errors
+        debug!("File '{output:?}' created");
         files_to_be_merged.push(output);
     }
     let json = util::merge_json_files(&files_to_be_merged)?;

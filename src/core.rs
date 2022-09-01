@@ -1,3 +1,4 @@
+use log::debug;
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf};
 
@@ -22,9 +23,11 @@ impl Display for Benchmark {
 
 impl Benchmark {
     pub(crate) fn from_config(config: PathBuf) -> std::io::Result<Self> {
+        debug!("Reading configuration file: {config:?}");
         let mut f = File::open(config)?;
         let mut content = String::new();
         f.read_to_string(&mut content)?;
+        debug!("Content: {content:?}");
         let value = content.as_str();
         let result = toml::from_str(value)?;
         Ok(result)

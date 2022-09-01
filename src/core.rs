@@ -1,4 +1,5 @@
-use log::debug;
+use crate::util;
+use log::{debug, error};
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf};
 
@@ -39,11 +40,56 @@ impl Benchmark {
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct Run {
+    #[serde(default)]
+    #[serde(deserialize_with = "from_commit")]
     commits: Option<Vec<String>>,
     cleanup: Option<String>,
     prepare: Option<String>,
     setup: Option<String>,
     command: String,
+}
+
+fn from_commit<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: Option<Vec<String>> = serde::Deserialize::deserialize(deserializer)?;
+
+    match s {
+        Some(vec) => {
+            let (is_ok, failed) = check_validity_of_strings(&vec);
+            if is_ok {
+                Ok(Some(vec))
+            } else {
+                let msg = format!("Following commits not found: {failed:?}");
+                let err = serde::de::Error::custom(msg.replace('"', ""));
+                error!("{err}");
+                Err(err)
+            }
+        }
+        None => Ok(None),
+    }
+}
+
+fn check_validity_of_strings(vec: &[String]) -> (bool, Vec<String>) {
+    debug!("Commits: {vec:?}");
+    let mut csb = util::get_commit_ids().unwrap();
+    let mut csa = util::get_abbrev_commit_ids().unwrap();
+    let mut cs = util::get_branches().unwrap();
+    cs.append(&mut csa);
+    cs.append(&mut csb);
+    debug!("Commits: {cs:?}");
+    let mut not_found = Vec::new();
+    let mut is_ok = true;
+    for v in vec {
+        if cs.iter().any(|s| s == v) {
+            continue;
+        } else {
+            not_found.push(v.clone());
+            is_ok = false;
+        }
+    }
+    (is_ok, not_found)
 }
 
 impl Run {

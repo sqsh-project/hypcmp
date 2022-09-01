@@ -1,5 +1,5 @@
 use clap::Parser;
-use log::{debug, warn, info};
+use log::{debug, info, warn};
 use std::process::Command;
 
 mod cli;
@@ -10,6 +10,9 @@ fn main() -> std::io::Result<()> {
     env_logger::init();
     let config = cli::Cli::parse();
     debug!("Loaded configuration: {config:?}");
+
+    util::hyperfine_installed()?;
+    debug!("Hyperfine is installed");
 
     util::is_git_dirty()?;
     debug!("Git state: clean");

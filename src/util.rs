@@ -58,7 +58,6 @@ pub(crate) fn to_string(msg: Vec<u8>) -> String {
     result
 }
 
-
 pub(crate) fn get_current_branch_or_id() -> std::io::Result<String> {
     let mut br = get_current_branch()?;
     trim_newline(&mut br);
@@ -120,4 +119,64 @@ pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::
         result_list.append(r);
     }
     Ok(result)
+}
+
+pub(crate) fn get_commit_ids() -> Option<Vec<String>> {
+    let result = Command::new("git")
+        .arg("rev-list")
+        .arg("--all")
+        .output()
+        .expect("Command failed");
+    if result.status.success() {
+        let s = to_string(result.stdout);
+        let res: Vec<String> = s.split('\n').map(|s: &str| s.to_string()).collect();
+        Some(res)
+    } else {
+        None
+    }
+}
+
+pub(crate) fn get_abbrev_commit_ids() -> Option<Vec<String>> {
+    let result = Command::new("git")
+        .arg("rev-list")
+        .arg("--all")
+        .arg("--abbrev-commit")
+        .output()
+        .expect("Command failed");
+    if result.status.success() {
+        let s = to_string(result.stdout);
+        let res: Vec<String> = s.split('\n').map(|s: &str| s.to_string()).collect();
+        Some(res)
+    } else {
+        None
+    }
+}
+
+pub(crate) fn get_branches() -> Option<Vec<String>> {
+    let result = Command::new("git")
+        .arg("branch")
+        .arg("--all")
+        .output()
+        .expect("Command failed");
+    if result.status.success() {
+        let s = to_string(result.stdout);
+        let res: Vec<String> = s
+            .split('\n')
+            .map(|s: &str| s[2..].to_string())
+            .filter(|s| !s.contains("remotes"))
+            .collect();
+        Some(res)
+    } else {
+        None
+    }
+}
+
+pub(crate) fn hyperfine_installed() -> std::io::Result<()> {
+    let result = Command::new("which").arg("hyperfine").output()?;
+    if !result.status.success() {
+        let err = Error::new(ErrorKind::Other, "Hyperfine not installed");
+        Err(err)
+    } else {
+        Ok(())
+    }
 }

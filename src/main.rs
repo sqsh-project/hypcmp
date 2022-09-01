@@ -1,5 +1,5 @@
 use clap::Parser;
-use log::{debug, info};
+use log::{debug, warn, info};
 use std::process::Command;
 
 mod cli;
@@ -39,9 +39,21 @@ fn main() -> std::io::Result<()> {
 
         cmd.args(run.to_hyperfine_params());
         info!("Running: {cmd:?}");
-        cmd.output()?; // TODO: Catch possible errors
-        debug!("File '{output:?}' created");
-        files_to_be_merged.push(output);
+
+        let result = cmd.output()?;
+        if result.status.success() {
+            debug!("Benchmark run successful");
+            files_to_be_merged.push(output);
+        } else {
+            let msg = result.stderr;
+            let s = util::to_string(msg);
+            warn!("Run[{label:?}] failed with '{s:?}'");
+            if s.contains("The setup command terminated with a non-zero exit") {
+                eprintln!("[Warning] Run {label:?} failed. Setup failed");
+            }
+            eprintln!("[Warning] Run {label:?} failed. Skipping... -> Hyperfine: {s:?}");
+            eprintln!("[Warning] {cmd:?}");
+        }
     }
     let json = util::merge_json_files(&files_to_be_merged)?;
     util::write_json_to_disk(json, &c.output)?;

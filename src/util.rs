@@ -49,8 +49,15 @@ pub(crate) fn get_current_branch() -> std::io::Result<String> {
         .arg("HEAD")
         .output()?
         .stdout;
-    Ok(std::str::from_utf8(&r).unwrap().to_string()) // return HEAD is detached
+    Ok(to_string(r)) // return HEAD is detached
 }
+
+pub(crate) fn to_string(msg: Vec<u8>) -> String {
+    let mut result = std::str::from_utf8(&msg).unwrap().to_string();
+    trim_newline(&mut result);
+    result
+}
+
 
 pub(crate) fn get_current_branch_or_id() -> std::io::Result<String> {
     let mut br = get_current_branch()?;
@@ -81,7 +88,7 @@ pub(crate) fn get_current_commit() -> std::io::Result<String> {
         .arg("HEAD")
         .output()?
         .stdout;
-    Ok(std::str::from_utf8(&r).unwrap().to_string()) // return HEAD is detached
+    Ok(to_string(r)) // return HEAD is detached
 }
 
 pub(crate) fn write_json_to_disk(json: Value, output: &String) -> std::io::Result<()> {

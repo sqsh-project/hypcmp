@@ -1,4 +1,4 @@
-# sqsh-benchmark
+# hypcmp
 
 A way to benchmark the performance of the library. A configuration file
 is being read for [`hyperfine`](https://github.com/sharkdp/hyperfine)

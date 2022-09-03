@@ -73,11 +73,13 @@ where
 
 fn check_validity_of_strings(vec: &[String]) -> (bool, Vec<String>) {
     debug!("Commits: {vec:?}");
-    let mut csb = util::get_commit_ids().unwrap();
-    let mut csa = util::get_abbrev_commit_ids().unwrap();
     let mut cs = util::get_branches().unwrap();
-    cs.append(&mut csa);
-    cs.append(&mut csb);
+    let mut ct = util::get_tags().unwrap();
+    let mut csa = util::get_abbrev_commit_ids().unwrap();
+    let mut csb = util::get_commit_ids().unwrap();
+    cs.append(&mut ct); // check first branches + tags
+    cs.append(&mut csa); // then abbreviated commit ids
+    cs.append(&mut csb); // then full commit ids
     debug!("Commits: {cs:?}");
     let mut not_found = Vec::new();
     let mut is_ok = true;

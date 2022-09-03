@@ -180,3 +180,18 @@ pub(crate) fn hyperfine_installed() -> std::io::Result<()> {
         Ok(())
     }
 }
+
+pub(crate) fn get_tags() -> Option<Vec<String>> {
+    let result = Command::new("git")
+        .arg("tag")
+        .arg("--list")
+        .output()
+        .expect("Command failed");
+    if result.status.success() {
+        let out = to_string(result.stdout);
+        let res: Vec<String> = out.split('\n').map(|s: &str| s.to_string()).collect();
+        Some(res)
+    } else {
+        None
+    }
+}

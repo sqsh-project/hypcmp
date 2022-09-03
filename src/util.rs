@@ -163,7 +163,6 @@ pub(crate) fn get_branches() -> Option<Vec<String>> {
         let res: Vec<String> = s
             .split('\n')
             .map(|s: &str| s[2..].to_string())
-            .filter(|s| !s.contains("remotes"))
             .collect();
         Some(res)
     } else {

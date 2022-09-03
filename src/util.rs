@@ -160,10 +160,7 @@ pub(crate) fn get_branches() -> Option<Vec<String>> {
         .expect("Command failed");
     if result.status.success() {
         let s = to_string(result.stdout);
-        let res: Vec<String> = s
-            .split('\n')
-            .map(|s: &str| s[2..].to_string())
-            .collect();
+        let res: Vec<String> = s.split('\n').map(|s: &str| s[2..].to_string()).collect();
         Some(res)
     } else {
         None

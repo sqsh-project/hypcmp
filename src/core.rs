@@ -122,14 +122,18 @@ impl Run {
         match (&self.setup, &self.commits) {
             (Some(scmd), Some(_)) => {
                 result.push("--setup".to_string());
-                let concat = format!("git checkout {{commit}} && {scmd}");
+                let concat = format!("git checkout {{commit}} && {stp}", stp = scmd);
                 result.push(concat);
             }
             (None, Some(_)) => {
                 result.push("--setup".to_string());
                 result.push("git checkout {commit}".to_string());
             }
-            _ => (),
+            (Some(scmd), None) => {
+                result.push("--setup".to_string());
+                result.push(scmd.to_string());
+            }
+            (None, None) => (),
         }
         result.push(self.command.clone());
         result

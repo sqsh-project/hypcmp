@@ -1,5 +1,5 @@
 use clap::Parser;
-use log::{debug, info, warn};
+use log::{debug, error, info};
 use std::process::Command;
 
 mod cli;
@@ -50,12 +50,9 @@ fn main() -> std::io::Result<()> {
         } else {
             let msg = result.stderr;
             let s = util::to_string(msg);
-            warn!("Run[{label:?}] failed with '{s:?}'");
-            if s.contains("The setup command terminated with a non-zero exit") {
-                eprintln!("[Warning] Run {label:?} failed. Setup failed");
-            }
-            eprintln!("[Warning] Run {label:?} failed. Skipping... -> Hyperfine: {s:?}");
-            eprintln!("[Warning] {cmd:?}");
+            error!("Run {label:?} failed. Skipping...");
+            error!("Hyperfine message:   {}", s);
+            error!("Run parameters were: {cmd:?}");
         }
     }
     let json = util::merge_json_files(&files_to_be_merged)?;

@@ -31,11 +31,14 @@ pub(crate) fn checkout(commit: String) -> std::io::Result<()> {
     let id = get_current_branch_or_id()?;
     if id != commit {
         debug!("Git state changed!");
-        Command::new("git")
+        let status = Command::new("git")
             .arg("checkout")
-            .arg(commit)
+            .arg(commit.clone())
             .arg("--quiet")
             .status()?;
+        if !status.success() {
+            error!("Could not checkout from {} to {}", id, commit);
+        }
     } else {
         debug!("Git state not changed");
     }

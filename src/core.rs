@@ -46,6 +46,7 @@ pub(crate) struct Run {
     cleanup: Option<String>,
     prepare: Option<String>,
     setup: Option<String>,
+    name: Option<String>,
     command: String,
 }
 
@@ -57,7 +58,7 @@ where
 
     match s {
         Some(vec) => {
-            let (is_ok, failed) = check_validity_of_strings(&vec);
+            let (is_ok, failed) = check_validity_of_commit_ids(&vec);
             if is_ok {
                 Ok(Some(vec))
             } else {
@@ -71,7 +72,7 @@ where
     }
 }
 
-fn check_validity_of_strings(vec: &[String]) -> (bool, Vec<String>) {
+fn check_validity_of_commit_ids(vec: &[String]) -> (bool, Vec<String>) {
     debug!("Commits: {vec:?}");
     let mut cs = util::get_branches().unwrap();
     let mut ct = util::get_tags().unwrap();
@@ -97,6 +98,13 @@ fn check_validity_of_strings(vec: &[String]) -> (bool, Vec<String>) {
 impl Run {
     pub(crate) fn to_hyperfine_params(&self) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
+        match &self.name {
+            Some(name) => {
+                result.push("--command-name".to_string());
+                result.push(name.clone());
+            },
+            None => (),
+        }
         match &self.commits {
             Some(ids) => {
                 result.push("--parameter-list".to_string());

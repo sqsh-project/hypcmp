@@ -1,10 +1,14 @@
 [package]
 name = "hypcmp"
-version = "0.2.3"
+version = "0.2.4"
+authors =  ["Ugur Cayoglu <cayoglu@me.com>"]
 edition = "2021"
-description = "Comparison tool to run hyperfine benchmarks with toml file support"
-license = "MIT OR Apache-2.0"
+description = "Extension to run hyperfine with toml files w/ commit switches."
 documentation = "https://docs.rs/hypcmp"
+repository = "https://github.com/sqsh-project/hypcmp"
+license = "MIT OR Apache-2.0"
+keywords = ["benchmarks", "toml", "hyperfine", "performance", "profiling"]
+categories = ["development-tools::profiling"]
 
 [dependencies]
 toml = "0.5.*"

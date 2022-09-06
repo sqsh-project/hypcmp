@@ -8,7 +8,7 @@ Based on this, the performance can be analysed.
 ## Configuration Example
 
 ```toml
-output = "duplicate.json"
+output = "copy.json"
 hyperfine_params = [  # common hyperfine parameters for all runs
     "--runs", "5",
     "--warmup", "3",

@@ -1,0 +1,18 @@
+output = "duplicate.json"
+hyperfine_params = [  # common hyperfine parameters for all runs
+    "--runs", "5",
+    "--warmup", "3",
+    "--parameter-list", "ifile", "Cargo.toml,README.md",
+    "--parameter-list", "ofile", "/tmp/test.raw",
+]
+
+[run.dd]
+commits = ["main"] # can be hash, tag or branch
+command = "dd if={ifile} of={ofile}"
+cleanup = "rm {ofile}"
+
+[run.cp]
+command = "cp {ifile} {ofile}"
+
+[run.rsync]
+command = "rsync -a {ifile} {ofile}"

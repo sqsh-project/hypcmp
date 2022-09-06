@@ -32,21 +32,18 @@ output = "duplicate.json"
 hyperfine_params = [  # common hyperfine parameters for all runs
     "--runs", "5",
     "--warmup", "3",
-    "--parameter-list", "ifile", "Cargo.toml",
+    "--parameter-list", "ifile", "Cargo.toml,README.md",
     "--parameter-list", "ofile", "/tmp/test.raw",
 ]
 
-[run.past]
-commits = ["master"] # can be hash, tag or branch
+[run.dd]
+commits = ["main"] # can be hash, tag or branch
 command = "dd if={ifile} of={ofile}"
-setup = "cargo install --path sqsh-cli"
 cleanup = "rm {ofile}"
-# prepare = "" maybe empty cache
 
-[run.reference]
-command = "sqsh-cli duplicate {ifile} {ofile}"
-setup = "cargo install --path sqsh-cli"
+[run.cp]
+command = "cp {ifile} {ofile}"
 
-[run.control]
-command = "dd if={ifile} of={ofile}"
+[run.rsync]
+command = "rsync -a {ifile} {ofile}"
 ```

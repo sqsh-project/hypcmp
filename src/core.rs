@@ -1,5 +1,5 @@
 use crate::util;
-use log::{debug, error};
+use log::{debug, error, warn};
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf};
 
@@ -47,6 +47,7 @@ pub(crate) struct Run {
     prepare: Option<String>,
     setup: Option<String>,
     name: Option<String>,
+    shell: Option<String>,
     command: String,
 }
 
@@ -98,11 +99,21 @@ fn check_validity_of_commit_ids(vec: &[String]) -> (bool, Vec<String>) {
 impl Run {
     pub(crate) fn to_hyperfine_params(&self) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
+        match (&self.shell, &self.commits, &self.setup) {
+            (Some(_), Some(_), Some(_)) => {
+                warn!("If 'commits' and 'setup' are set, the parameter shell cannot be set.");
+            }
+            (Some(sh), _, _) => {
+                result.push("--shell".to_string());
+                result.push(sh.clone());
+            }
+            _ => {}
+        }
         match &self.name {
             Some(name) => {
                 result.push("--command-name".to_string());
                 result.push(name.clone());
-            },
+            }
             None => (),
         }
         match &self.commits {

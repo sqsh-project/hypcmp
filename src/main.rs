@@ -1,5 +1,5 @@
 use clap::Parser;
-use log::{debug, error, info};
+use log::{debug, error, info, trace};
 use std::process::Command;
 
 mod cli;
@@ -7,18 +7,17 @@ mod core;
 mod util;
 
 fn main() -> std::io::Result<()> {
-    env_logger::init();
     let config = cli::Cli::parse();
     debug!("Loaded configuration: {config:?}");
+    env_logger::Builder::new()
+        .filter_level(config.verbose.log_level_filter())
+        .init();
 
     util::hyperfine_installed()?;
-    debug!("Hyperfine is installed");
-
     util::is_git_dirty()?;
-    debug!("Git state: clean");
 
     let c = core::Benchmark::from_config(config.config)?;
-    debug!("Benchmark Setup: {c:?}");
+    trace!("Benchmark Setup: {c:?}");
 
     let dir = tempfile::tempdir()?;
     debug!("Temporary Directory: {dir:?}");

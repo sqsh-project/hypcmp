@@ -1,5 +1,4 @@
-use log::debug;
-use log::error;
+use log::{debug, error, trace};
 use serde_json::Value;
 use std::fs::File;
 use std::io::{BufWriter, Error, ErrorKind, Read, Write};
@@ -108,7 +107,7 @@ pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::
     let mut f = File::open(files[0].clone())?;
     let mut buf = String::new();
     f.read_to_string(&mut buf)?;
-    debug!("Read first file: {buf:?}");
+    trace!("Read first file: {buf:?}");
     let mut result: serde_json::Value = serde_json::from_str(buf.as_str())?;
     let result_list = result["results"].as_array_mut().unwrap();
     for file in files.iter().skip(1) {
@@ -116,7 +115,7 @@ pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::
         let mut f = File::open(file)?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)?;
-        debug!("Read file: {buf:?}");
+        trace!("Read file: {buf:?}");
         let mut val: serde_json::Value = serde_json::from_str(buf.as_str())?;
         let r = val["results"].as_array_mut().unwrap();
         result_list.append(r);
@@ -176,6 +175,7 @@ pub(crate) fn hyperfine_installed() -> std::io::Result<()> {
         let err = Error::new(ErrorKind::Other, "Hyperfine not installed");
         Err(err)
     } else {
+        debug!("Hyperfine is installed");
         Ok(())
     }
 }

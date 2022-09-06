@@ -1,5 +1,5 @@
 use crate::util;
-use log::{debug, error, warn};
+use log::{debug, error, trace, warn};
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf};
 
@@ -28,7 +28,7 @@ impl Benchmark {
         let mut f = File::open(config)?;
         let mut content = String::new();
         f.read_to_string(&mut content)?;
-        debug!("Content: {content:?}");
+        trace!("Content: {content:?}");
         let value = content.as_str();
         let result = toml::from_str(value)?;
         Ok(result)

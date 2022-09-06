@@ -8,4 +8,7 @@ pub struct Cli {
     /// Configuration file [*.toml]
     #[clap(value_parser)]
     pub config: PathBuf,
+
+    #[clap(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
 }

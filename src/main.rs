@@ -17,7 +17,7 @@ fn main() -> std::io::Result<()> {
     util::is_git_dirty()?;
 
     let c = core::Benchmark::from_config(config.config)?;
-    trace!("Benchmark Setup: {c:?}");
+    trace!("Benchmark Setup: {c:#?}");
 
     let dir = tempfile::tempdir()?;
     debug!("Temporary Directory: {dir:?}");

@@ -28,7 +28,7 @@ impl Benchmark {
         let mut f = File::open(config)?;
         let mut content = String::new();
         f.read_to_string(&mut content)?;
-        trace!("Content: {content:?}");
+        trace!("Content:\n {content}");
         let value = content.as_str();
         let result = toml::from_str(value)?;
         Ok(result)

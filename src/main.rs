@@ -54,9 +54,17 @@ fn main() -> std::io::Result<()> {
             error!("Run parameters were: {cmd:?}");
         }
     }
-    let json = util::merge_json_files(&files_to_be_merged)?;
-    util::write_json_to_disk(json, &c.output)?;
-    util::cleanup(files_to_be_merged, dir)?;
-    util::checkout(current_branch)?;
+    if files_to_be_merged.is_empty() {
+        let msg = "No hyperfine benchmark run";
+        error!("{msg}");
+        let err = std::io::Error::new(std::io::ErrorKind::Other, msg);
+        util::checkout(current_branch)?;
+        return Err(err)
+    } else {
+        let json = util::merge_json_files(&files_to_be_merged)?;
+        util::write_json_to_disk(json, &c.output)?;
+        util::cleanup(files_to_be_merged, dir)?;
+        util::checkout(current_branch)?;
+    }
     Ok(())
 }

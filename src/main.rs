@@ -8,10 +8,10 @@ mod util;
 
 fn main() -> std::io::Result<()> {
     let config = cli::Cli::parse();
-    debug!("Loaded configuration: {config:?}");
     env_logger::Builder::new()
         .filter_level(config.verbose.log_level_filter())
         .init();
+    debug!("Loaded configuration: {config:?}");
 
     util::hyperfine_installed()?;
     util::is_git_dirty()?;

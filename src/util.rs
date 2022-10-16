@@ -194,3 +194,7 @@ pub(crate) fn get_tags() -> Option<Vec<String>> {
         None
     }
 }
+
+pub(crate) fn export_to_html(_json: &serde_json::Value) -> std::io::Result<()> {
+    Ok(())
+}

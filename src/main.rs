@@ -66,7 +66,7 @@ fn main() -> std::io::Result<()> {
         return Err(err);
     } else {
         let json = util::merge_json_files(&files_to_be_merged)?;
-        util::export_to_html(&json)?;
+        util::export_to_html(&json, "index.html".to_string())?;
         util::write_json_to_disk(json, &c.output)?;
         util::cleanup(files_to_be_merged, dir)?;
         util::checkout(current_branch)?;

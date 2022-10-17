@@ -195,13 +195,20 @@ pub(crate) fn get_tags() -> Option<Vec<String>> {
     }
 }
 
-pub(crate) fn export_to_html(_json: &serde_json::Value) -> std::io::Result<()> {
+use plotly::Plot;
+
+pub(crate) fn export_to_html(_json: &serde_json::Value, fname: String) -> std::io::Result<()> {
     let results = _json["results"].as_array().unwrap();
-    for run in results {
-        let name = run["command"].as_str().unwrap();
+    let mut plot = Plot::new();
+    for (ix, run) in results.iter().enumerate() {
+        let basename = run["command"].as_str().unwrap();
         let times = run["times"].as_array().unwrap();
         let times: Vec<_> = times.iter().map(|v| v.as_f64().unwrap()).collect();
-        println!("{:?}: {:?}", name, times)
+        let name = format!("{basename}#{ix}");
+        println!("{name}");
+        let trace = plotly::BoxPlot::new(times).name(&name);
+        plot.add_trace(trace);
     }
+    plot.to_html(fname);
     Ok(())
 }

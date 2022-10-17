@@ -1,6 +1,6 @@
 [package]
 name = "hypcmp"
-version = "0.2.5"
+version = "0.3.0"
 authors =  ["Ugur Cayoglu <cayoglu@me.com>"]
 edition = "2021"
 description = "Extension to run hyperfine with toml files w/ commit switches."
@@ -19,3 +19,4 @@ serde_json = "1.*"
 log = "0.4.*"
 env_logger = "0.9.*"
 clap-verbosity-flag = "1.0.*"
+plotly = "0.6.*"

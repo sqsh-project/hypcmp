@@ -4,15 +4,14 @@
 
 # hypcmp
 
-A way to benchmark the performance of different applications with [`hyperfine`](https://github.com/sharkdp/hyperfine) using a TOML configuration file and JSON output. Further, each run can include a `[commits] = [...]` tag, which enables
-comparing across commits. 
+A way to benchmark applications with [`hyperfine`](https://github.com/sharkdp/hyperfine) using a TOML configuration 
+file. This also enables benchmarking across commits using `commits = [...]` attribute.
 
-> Be aware that the git status of the repository is not allowed to be dirty for commits to work, since a checkout is being executed in the background. 
+> Benchmarking across commits is only possible if the git status is clean. 
 
 ## Examples
 
 ```toml
-output = "copy.json"
 hyperfine_params = [  # common hyperfine parameters for all runs
     "--runs", "5",
     "--warmup", "3",
@@ -32,7 +31,6 @@ command = "rsync -a Cargo.toml /tmp/Cargo.toml.rsync"
 A more complicated example:
 
 ```toml
-output = "duplicate.json"
 hyperfine_params = [  # common hyperfine parameters for all runs
     "--runs", "5",
     "--warmup", "3",
@@ -52,4 +50,4 @@ command = "cp {ifile} {ofile}"
 command = "rsync -a {ifile} {ofile}"
 ```
 
-Other examples are given in the [examples](./examples/) folder.
+Further examples are given in the [examples](./examples/) folder.

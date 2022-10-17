@@ -1,7 +1,7 @@
 use log::{debug, error, trace};
 use serde_json::Value;
 use std::fs::File;
-use std::io::{BufWriter, Error, ErrorKind, Read, Write};
+use std::io::{Error, ErrorKind, Read, Write};
 use std::process::Command;
 use tempfile::TempDir;
 
@@ -92,13 +92,11 @@ pub(crate) fn get_current_commit() -> std::io::Result<String> {
     Ok(to_string(r)) // return HEAD is detached
 }
 
-pub(crate) fn write_json_to_disk(json: Value, output: &String) -> std::io::Result<()> {
+pub(crate) fn write_json_to_disk(json: Value) -> std::io::Result<()> {
     let json_pp = serde_json::to_string_pretty(&json)?;
-    let f = File::create(output)?;
-    let mut bw = BufWriter::new(f);
-    bw.write_all(json_pp.as_bytes())?;
-    bw.flush()?;
-    debug!("JSON file created: {output:?}");
+    let mut stdout = std::io::stdout().lock();
+    stdout.write_all(json_pp.as_bytes())?;
+    stdout.flush()?;
     Ok(())
 }
 

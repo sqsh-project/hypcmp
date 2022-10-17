@@ -5,7 +5,6 @@ use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf}
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct Benchmark {
-    pub(crate) output: String,
     hyperfine_params: Vec<String>,
     pub(crate) run: HashMap<String, Run>,
 }
@@ -46,7 +45,6 @@ pub(crate) struct Run {
     cleanup: Option<String>,
     prepare: Option<String>,
     setup: Option<String>,
-    name: Option<String>,
     shell: Option<String>,
     command: String,
 }
@@ -108,13 +106,6 @@ impl Run {
                 result.push(sh.clone());
             }
             _ => {}
-        }
-        match &self.name {
-            Some(name) => {
-                result.push("--command-name".to_string());
-                result.push(name.clone());
-            }
-            None => (),
         }
         match &self.commits {
             Some(ids) => {

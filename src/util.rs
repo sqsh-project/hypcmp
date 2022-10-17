@@ -197,20 +197,41 @@ pub(crate) fn get_tags() -> Option<Vec<String>> {
 }
 
 #[cfg(feature = "plotly")]
-use plotly::Plot;
+use plotly::{
+    box_plot::BoxPoints,
+    common::Title,
+    layout::{Axis, BoxMode, Layout},
+    Plot,
+};
 
 #[cfg(feature = "plotly")]
-pub(crate) fn export_to_html(_json: &serde_json::Value, fname: PathBuf) -> std::io::Result<()> {
-    let results = _json["results"].as_array().unwrap();
+pub(crate) fn export_to_html(json: &serde_json::Value, fname: PathBuf) -> std::io::Result<()> {
+    let results = json["results"].as_array().unwrap();
     let mut plot = Plot::new();
-    for (ix, run) in results.iter().enumerate() {
+    for run in results {
+        let params = run["parameters"].as_object();
+        let hover = match params {
+            Some(p) => serde_json::to_string_pretty(&p)?,
+            None => "".to_string(),
+        };
         let basename = run["command"].as_str().unwrap();
         let times = run["times"].as_array().unwrap();
         let times: Vec<_> = times.iter().map(|v| v.as_f64().unwrap()).collect();
-        let name = format!("{basename}#{ix}");
-        let trace = plotly::BoxPlot::new(times).name(&name);
+        let trace = plotly::BoxPlot::new(times)
+            .name(&basename)
+            .box_points(BoxPoints::All)
+            .jitter(0.3)
+            .hover_text(&hover);
         plot.add_trace(trace);
     }
+    let layout = Layout::new()
+        .y_axis(
+            Axis::new()
+                .title(Title::new("Benchmark Results"))
+                .zero_line(true),
+        )
+        .box_mode(BoxMode::Group);
+    plot.set_layout(layout);
     plot.to_html(fname);
     Ok(())
 }

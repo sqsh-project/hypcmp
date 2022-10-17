@@ -32,6 +32,10 @@ fn main() -> std::io::Result<()> {
         let mut cmd = Command::new("hyperfine");
         cmd.args(c.to_hyperfine_params());
 
+        let mut name = vec!["--command-name".to_string()];
+        name.push(label.clone());
+        cmd.args(name);
+
         let mut json = vec!["--export-json".to_string()];
         let mut filename = label.clone();
         filename.push_str(".json");
@@ -59,7 +63,7 @@ fn main() -> std::io::Result<()> {
         error!("{msg}");
         let err = std::io::Error::new(std::io::ErrorKind::Other, msg);
         util::checkout(current_branch)?;
-        return Err(err)
+        return Err(err);
     } else {
         let json = util::merge_json_files(&files_to_be_merged)?;
         util::export_to_html(&json)?;

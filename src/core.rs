@@ -46,7 +46,6 @@ pub(crate) struct Run {
     cleanup: Option<String>,
     prepare: Option<String>,
     setup: Option<String>,
-    name: Option<String>,
     shell: Option<String>,
     command: String,
 }
@@ -108,13 +107,6 @@ impl Run {
                 result.push(sh.clone());
             }
             _ => {}
-        }
-        match &self.name {
-            Some(name) => {
-                result.push("--command-name".to_string());
-                result.push(name.clone());
-            }
-            None => (),
         }
         match &self.commits {
             Some(ids) => {

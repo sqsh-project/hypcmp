@@ -196,5 +196,12 @@ pub(crate) fn get_tags() -> Option<Vec<String>> {
 }
 
 pub(crate) fn export_to_html(_json: &serde_json::Value) -> std::io::Result<()> {
+    let results = _json["results"].as_array().unwrap();
+    for run in results {
+        let name = run["command"].as_str().unwrap();
+        let times = run["times"].as_array().unwrap();
+        let times: Vec<_> = times.iter().map(|v| v.as_f64().unwrap()).collect();
+        println!("{:?}: {:?}", name, times)
+    }
     Ok(())
 }

@@ -205,7 +205,6 @@ pub(crate) fn export_to_html(_json: &serde_json::Value, fname: String) -> std::i
         let times = run["times"].as_array().unwrap();
         let times: Vec<_> = times.iter().map(|v| v.as_f64().unwrap()).collect();
         let name = format!("{basename}#{ix}");
-        println!("{name}");
         let trace = plotly::BoxPlot::new(times).name(&name);
         plot.add_trace(trace);
     }

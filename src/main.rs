@@ -1,6 +1,6 @@
 use clap::Parser;
 use log::{debug, error, info, trace};
-use std::process::Command;
+use std::{path::Path, process::Command};
 
 mod cli;
 mod core;
@@ -66,7 +66,9 @@ fn main() -> std::io::Result<()> {
         return Err(err);
     } else {
         let json = util::merge_json_files(&files_to_be_merged)?;
-        util::export_to_html(&json, "index.html".to_string())?;
+        let stem = Path::new(&c.output).file_stem().unwrap();
+        let html = Path::new(stem).with_extension("html");
+        util::export_to_html(&json, html)?;
         util::write_json_to_disk(json, &c.output)?;
         util::cleanup(files_to_be_merged, dir)?;
         util::checkout(current_branch)?;

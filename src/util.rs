@@ -2,6 +2,7 @@ use log::{debug, error, trace};
 use serde_json::Value;
 use std::fs::File;
 use std::io::{BufWriter, Error, ErrorKind, Read, Write};
+use std::path::PathBuf;
 use std::process::Command;
 use tempfile::TempDir;
 
@@ -195,9 +196,11 @@ pub(crate) fn get_tags() -> Option<Vec<String>> {
     }
 }
 
+#[cfg(feature = "plotly")]
 use plotly::Plot;
 
-pub(crate) fn export_to_html(_json: &serde_json::Value, fname: String) -> std::io::Result<()> {
+#[cfg(feature = "plotly")]
+pub(crate) fn export_to_html(_json: &serde_json::Value, fname: PathBuf) -> std::io::Result<()> {
     let results = _json["results"].as_array().unwrap();
     let mut plot = Plot::new();
     for (ix, run) in results.iter().enumerate() {
@@ -209,5 +212,10 @@ pub(crate) fn export_to_html(_json: &serde_json::Value, fname: String) -> std::i
         plot.add_trace(trace);
     }
     plot.to_html(fname);
+    Ok(())
+}
+
+#[cfg(not(feature = "plotly"))]
+pub(crate) fn export_to_html(_: &serde_json::Value, _: PathBuf) -> std::io::Result<()> {
     Ok(())
 }

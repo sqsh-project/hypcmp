@@ -5,11 +5,19 @@
 # hypcmp
 
 A way to benchmark the performance of different applications with [`hyperfine`](https://github.com/sharkdp/hyperfine) using a TOML configuration file and JSON output. Further, each run can include a `[commits] = [...]` tag, which enables
-comparing across commits. 
+comparing across commits.
 
-> Be aware that the git status of the repository is not allowed to be dirty for commits to work, since a checkout is being executed in the background. 
+> Be aware that the git status of the repository is not allowed to be dirty for commits to work, since a checkout is being executed in the background.
 
-## Examples
+## Usage
+
+Simple feed a configuration file for the benchmark:
+
+```bash
+hypcmp examples/duplicate.toml
+```
+
+## Example configurations
 
 ```toml
 output = "copy.json"

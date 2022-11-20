@@ -1,12 +1,23 @@
 use clap::Parser;
 use hypcmp::{util, Benchmark};
 use log::{debug, error, info, trace};
+use std::path::PathBuf;
 use std::{path::Path, process::Command};
 
-mod cli;
+/// Command-line Interface (CLI) for the hypcmp library
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+pub struct Cli {
+    /// Configuration file [*.toml]
+    #[clap(value_parser)]
+    pub config: PathBuf,
+
+    #[clap(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
+}
 
 fn main() -> std::io::Result<()> {
-    let config = cli::Cli::parse();
+    let config = Cli::parse();
     env_logger::Builder::new()
         .filter_level(config.verbose.log_level_filter())
         .init();

@@ -1,10 +1,9 @@
 use clap::Parser;
+use hypcmp::{util, Benchmark};
 use log::{debug, error, info, trace};
 use std::{path::Path, process::Command};
 
 mod cli;
-mod core;
-mod util;
 
 fn main() -> std::io::Result<()> {
     let config = cli::Cli::parse();
@@ -16,7 +15,7 @@ fn main() -> std::io::Result<()> {
     util::hyperfine_installed()?;
     util::is_git_dirty()?;
 
-    let c = core::Benchmark::from_config(config.config)?;
+    let c = Benchmark::from_config(config.config)?;
     trace!("Benchmark Setup: {c:#?}");
 
     let dir = tempfile::tempdir()?;

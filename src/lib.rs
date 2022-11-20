@@ -1,13 +1,13 @@
-use crate::util;
 use log::{debug, error, trace, warn};
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf};
+pub mod util;
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct Benchmark {
-    pub(crate) output: String,
+pub struct Benchmark {
+    pub output: String,
     hyperfine_params: Vec<String>,
-    pub(crate) run: HashMap<String, Run>,
+    pub run: HashMap<String, Run>,
 }
 
 impl Display for Benchmark {
@@ -23,7 +23,7 @@ impl Display for Benchmark {
 }
 
 impl Benchmark {
-    pub(crate) fn from_config(config: PathBuf) -> std::io::Result<Self> {
+    pub fn from_config(config: PathBuf) -> std::io::Result<Self> {
         debug!("Reading configuration file: {config:?}");
         let mut f = File::open(config)?;
         let mut content = String::new();
@@ -33,13 +33,13 @@ impl Benchmark {
         let result = toml::from_str(value)?;
         Ok(result)
     }
-    pub(crate) fn to_hyperfine_params(&self) -> Vec<String> {
+    pub fn to_hyperfine_params(&self) -> Vec<String> {
         self.hyperfine_params.clone()
     }
 }
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct Run {
+pub struct Run {
     #[serde(default)]
     #[serde(deserialize_with = "from_commit")]
     commits: Option<Vec<String>>,
@@ -96,7 +96,7 @@ fn check_validity_of_commit_ids(vec: &[String]) -> (bool, Vec<String>) {
 }
 
 impl Run {
-    pub(crate) fn to_hyperfine_params(&self) -> Vec<String> {
+    pub fn to_hyperfine_params(&self) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
         match (&self.shell, &self.commits, &self.setup) {
             (Some(_), Some(_), Some(_)) => {

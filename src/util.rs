@@ -106,7 +106,8 @@ pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::
     let mut buf = String::new();
     f.read_to_string(&mut buf)?;
     trace!("Read first file:\n{buf}");
-    let mut result: serde_json::Value = serde_json::from_str(buf.as_str())?;
+    let result: serde_json::Value = serde_json::from_str(buf.as_str())?;
+    let mut result = move_commit_label_to_cmd_name(result)?;
     let result_list = result["results"].as_array_mut().unwrap();
     for file in files.iter().skip(1) {
         debug!("Reading file: {file:?}");
@@ -114,11 +115,16 @@ pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::
         let mut buf = String::new();
         f.read_to_string(&mut buf)?;
         trace!("Read file: {buf}");
-        let mut val: serde_json::Value = serde_json::from_str(buf.as_str())?;
+        let val: serde_json::Value = serde_json::from_str(buf.as_str())?;
+        let mut val = move_commit_label_to_cmd_name(val)?;
         let r = val["results"].as_array_mut().unwrap();
         result_list.append(r);
     }
     Ok(result)
+}
+
+pub(crate) fn move_commit_label_to_cmd_name(json: Value) -> std::io::Result<serde_json::Value> {
+    unimplemented!()
 }
 
 pub(crate) fn get_commit_ids() -> Option<Vec<String>> {

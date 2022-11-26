@@ -123,8 +123,23 @@ pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::
     Ok(result)
 }
 
-pub(crate) fn move_commit_label_to_cmd_name(json: Value) -> std::io::Result<serde_json::Value> {
-    unimplemented!()
+pub(crate) fn move_commit_label_to_cmd_name(mut json: Value) -> std::io::Result<serde_json::Value> {
+    let results = json["results"].as_array_mut().unwrap();
+    for run in results {
+        let commit = run["parameters"]
+            .as_object()
+            .and_then(|hm| hm.get("commit"));
+        match commit {
+            Some(suff) => {
+                let old_name = run["command"].as_str().unwrap();
+                let suffix = suff.as_str().unwrap();
+                let new_name = [old_name, suffix].join("@");
+                run["command"] = serde_json::Value::String(new_name.to_string());
+            }
+            None => (),
+        }
+    }
+    Ok(json)
 }
 
 pub(crate) fn get_commit_ids() -> Option<Vec<String>> {

@@ -1,17 +1,37 @@
-hyperfine_params = [  # common hyperfine parameters for all runs
+# Common `hyperfine` parameters.
+# The following settings are shared by all runs defined in the next section.
+# Most commonly here are the setups `run`, `warmup` and `parameter-lists` shared
+# by each individual run.
+#
+# - `run`: Number of executions of each individual run
+# - `warmup`: Number of executions of each individual run for cache warmup
+# - `style`: Setting for the shell script. Recommended is to use `none` specifically
+#            if commits & setup is used.
+# - `paramenter-list`: Shared variable list for all runs e.g. input files for all runs
+hyperfine_params = [
     "--runs", "5",
     "--warmup", "3",
+    "--style", "none",
     "--parameter-list", "ifile", "Cargo.toml,README.md",
-    "--parameter-list", "ofile", "/tmp/test.raw",
 ]
 
+# Settings for individual runs to be benchmarked by `hyperfine`
+#
+# - `commits`:
+# - `cleanup`:
+# - `prepare`:
+# - `setup`:
+# - `shell`:
+# - `command`: (mandatory)
 [run.dd]
-commits = ["main"] # can be hash, tag or branch
-command = "dd if={ifile} of={ofile}"
-cleanup = "rm {ofile}"
+commits = ["main", "1fa7dfe"]
+setup = "which ls"
+command = "dd if={ifile} of=/tmp/Cargo.toml.dd"
+shell = "none"
+name = "dd of {ifile}"
 
 [run.cp]
-command = "cp {ifile} {ofile}"
+command = "cp {ifile} /tmp/Cargo.toml.cp"
 
 [run.rsync]
-command = "rsync -a {ifile} {ofile}"
+command = "rsync -a {ifile} /tmp/Cargo.toml.rsync"

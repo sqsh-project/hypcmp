@@ -5,30 +5,33 @@
 #
 # - `run`: Number of executions of each individual run
 # - `warmup`: Number of executions of each individual run for cache warmup
-# - `style`: Setting for the shell script. Recommended is to use `none` specifically
-#            if commits & setup is used.
-# - `paramenter-list`: Shared variable list for all runs e.g. input files for all runs
+# - `parameter-list`: Shared variable list for all runs e.g. input files for all runs
+#   + `parameter-scan <var> <start> <end>`: Numerical integer step size for parameters
+#   + `parameter-scan <var> <start> <end> -D <steps>`: Numerical step size for parameters
+#   + `parameter-scan <var> <param1>,<param2>,<param3>,...`: Qualitative list of parameters
 hyperfine_params = [
     "--runs", "5",
     "--warmup", "3",
-    "--style", "none",
     "--parameter-list", "ifile", "Cargo.toml,README.md",
 ]
 
 # Settings for individual runs to be benchmarked by `hyperfine`
 #
-# - `commits`:
-# - `cleanup`:
-# - `prepare`:
-# - `setup`:
-# - `shell`:
-# - `command`: (mandatory)
+# - `commits`: List of commit-ids to be run for each command
+#   + Allowed are branches, tags, full and 7-char commit-ids
+# - `cleanup`: Command to be executed after all timed runs are done
+# - `prepare`: Command to be executed before **each** timing run
+# - `setup`: Command to be executed before all timed runs are initiated
+# - `shell`: Setting for the shell script. Recommended is to use `none`, specifically
+#            not if `setup` and `commits` is used.
+# - `command`: Command to be executed (mandatory)
 [run.dd]
 commits = ["main", "1fa7dfe"]
+cleanup = "rm /tmp/Cargo.toml.dd"
+prepare = "echo 3"
 setup = "which ls"
-command = "dd if={ifile} of=/tmp/Cargo.toml.dd"
 shell = "none"
-name = "dd of {ifile}"
+command = "dd if={ifile} of=/tmp/Cargo.toml.dd"
 
 [run.cp]
 command = "cp {ifile} /tmp/Cargo.toml.cp"

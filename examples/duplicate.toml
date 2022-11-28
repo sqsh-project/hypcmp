@@ -5,7 +5,7 @@
 #
 # - `run`: Number of executions of each individual run
 # - `warmup`: Number of executions of each individual run for cache warmup
-# - `parameter-list`: Shared variable list for all runs e.g. input files for all runs
+# - `parameters`: Shared variables for all runs e.g. input files for all runs
 #   + `parameter-scan <var> <start> <end>`: Numerical integer step size for parameters
 #   + `parameter-scan <var> <start> <end> -D <steps>`: Numerical step size for parameters
 #   + `parameter-scan <var> <param1>,<param2>,<param3>,...`: Qualitative list of parameters
@@ -19,6 +19,10 @@ hyperfine_params = [
 #
 # - `commits`: List of commit-ids to be run for each command
 #   + Allowed are branches, tags, full and 7-char commit-ids
+#   + Special case flags:
+#       * `--all` runs command on all commits using 7-char commit-ids
+#       * `--branches` runs command on all branches
+#       * `--tags` runs command on all tags
 # - `cleanup`: Command to be executed after all timed runs are done
 # - `prepare`: Command to be executed before **each** timing run
 # - `setup`: Command to be executed before all timed runs are initiated

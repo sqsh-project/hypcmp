@@ -58,9 +58,18 @@ where
     match s {
         Some(vec) => match check_validity_of_commit_ids(&vec) {
             Commits::Valid => Ok(Some(vec)),
-            Commits::SpecialCaseAll(vec) => Ok(Some(vec)),
+            Commits::SpecialCaseAll(vec) => {
+                debug!("Running on {vec:?}");
+                Ok(Some(vec))
+            }
             Commits::SomeInvalid(vec) => {
                 let msg = format!("Following commits not found: {vec:?}");
+                let err = serde::de::Error::custom(msg.replace('"', ""));
+                error!("{err}");
+                Err(err)
+            }
+            Commits::NoTagsFound => {
+                let msg = format!("No tags found in repository");
                 let err = serde::de::Error::custom(msg.replace('"', ""));
                 error!("{err}");
                 Err(err)
@@ -72,6 +81,7 @@ where
 
 enum Commits {
     Valid,
+    NoTagsFound,
     SpecialCaseAll(Vec<String>),
     SomeInvalid(Vec<String>),
 }
@@ -80,6 +90,15 @@ fn check_validity_of_commit_ids(vec: &[String]) -> Commits {
     debug!("Commits: {vec:?}");
     if vec.iter().any(|s| s == "--all") {
         return Commits::SpecialCaseAll(util::get_abbrev_commit_ids().unwrap());
+    } else if vec.iter().any(|s| s == "--branches") {
+        return Commits::SpecialCaseAll(util::get_branches().unwrap());
+    } else if vec.iter().any(|s| s == "--tags") {
+        let vec = util::get_tags().unwrap();
+        if vec[0] == "" {
+            return Commits::NoTagsFound;
+        } else {
+            return Commits::SpecialCaseAll(vec);
+        }
     }
     let mut cs = util::get_branches().unwrap();
     let mut ct = util::get_tags().unwrap();

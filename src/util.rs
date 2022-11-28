@@ -157,6 +157,31 @@ pub(crate) fn get_commit_ids() -> Option<Vec<String>> {
     }
 }
 
+pub(crate) fn get_commit_ids_since_before(
+    since: Option<&str>,
+    before: Option<&str>,
+) -> Option<Vec<String>> {
+    let arg = match (since, before) {
+        (Some(since), Some(before)) => format!("{since}^..{before}"),
+        (None, Some(before)) => format!("{before}^"),
+        (Some(since), None) => format!("{since}^..HEAD"),
+        _ => return None,
+    };
+    let result = Command::new("git")
+        .arg("rev-list")
+        .arg(arg)
+        .arg("--abbrev-commit")
+        .output()
+        .expect("Command failed");
+    if result.status.success() {
+        let s = to_string(result.stdout);
+        let res: Vec<String> = s.split('\n').map(|s: &str| s.to_string()).collect();
+        Some(res)
+    } else {
+        None
+    }
+}
+
 pub(crate) fn get_abbrev_commit_ids() -> Option<Vec<String>> {
     let result = Command::new("git")
         .arg("rev-list")

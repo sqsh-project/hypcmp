@@ -99,6 +99,18 @@ fn check_validity_of_commit_ids(vec: &[String]) -> Commits {
         } else {
             return Commits::SpecialCaseAll(vec);
         }
+    } else if vec.iter().any(|s| s.starts_with("--since"))
+        || vec.iter().any(|s| s.starts_with("--before"))
+    {
+        let since = vec
+            .iter()
+            .find(|&f| f.starts_with("--since"))
+            .and_then(|s| s.strip_prefix("--since="));
+        let before = vec
+            .iter()
+            .find(|&f| f.starts_with("--before"))
+            .and_then(|s| s.strip_prefix("--before="));
+        return Commits::SpecialCaseAll(util::get_commit_ids_since_before(since, before).unwrap());
     }
     let mut cs = util::get_branches().unwrap();
     let mut ct = util::get_tags().unwrap();

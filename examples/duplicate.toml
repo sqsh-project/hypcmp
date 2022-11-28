@@ -23,6 +23,10 @@ hyperfine_params = [
 #       * `--all` runs command on all commits using 7-char commit-ids
 #       * `--branches` runs command on all branches
 #       * `--tags` runs command on all tags
+#       * `--since=<commit-id>` runs command on all commits since specific commit-id (incl.)
+#       * `--before=<commit-id>` runs command on all commits before specific commit-id (incl.)
+#    + Special case flags `--since` and `--before` can be combined
+#    + Special case flags take preference to other tags, branches or commit-ids given
 # - `cleanup`: Command to be executed after all timed runs are done
 # - `prepare`: Command to be executed before **each** timing run
 # - `setup`: Command to be executed before all timed runs are initiated

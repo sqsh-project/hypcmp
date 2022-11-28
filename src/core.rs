@@ -56,23 +56,31 @@ where
     let s: Option<Vec<String>> = serde::Deserialize::deserialize(deserializer)?;
 
     match s {
-        Some(vec) => {
-            let (is_ok, failed) = check_validity_of_commit_ids(&vec);
-            if is_ok {
-                Ok(Some(vec))
-            } else {
-                let msg = format!("Following commits not found: {failed:?}");
+        Some(vec) => match check_validity_of_commit_ids(&vec) {
+            Commits::Valid => Ok(Some(vec)),
+            Commits::SpecialCaseAll(vec) => Ok(Some(vec)),
+            Commits::SomeInvalid(vec) => {
+                let msg = format!("Following commits not found: {vec:?}");
                 let err = serde::de::Error::custom(msg.replace('"', ""));
                 error!("{err}");
                 Err(err)
             }
-        }
+        },
         None => Ok(None),
     }
 }
 
-fn check_validity_of_commit_ids(vec: &[String]) -> (bool, Vec<String>) {
+enum Commits {
+    Valid,
+    SpecialCaseAll(Vec<String>),
+    SomeInvalid(Vec<String>),
+}
+
+fn check_validity_of_commit_ids(vec: &[String]) -> Commits {
     debug!("Commits: {vec:?}");
+    if vec.iter().any(|s| s == "--all") {
+        return Commits::SpecialCaseAll(util::get_abbrev_commit_ids().unwrap());
+    }
     let mut cs = util::get_branches().unwrap();
     let mut ct = util::get_tags().unwrap();
     let mut csa = util::get_abbrev_commit_ids().unwrap();
@@ -82,16 +90,18 @@ fn check_validity_of_commit_ids(vec: &[String]) -> (bool, Vec<String>) {
     cs.append(&mut csb); // then full commit ids
     debug!("Commits: {cs:?}");
     let mut not_found = Vec::new();
-    let mut is_ok = true;
     for v in vec {
         if cs.iter().any(|s| s == v) {
             continue;
         } else {
             not_found.push(v.clone());
-            is_ok = false;
         }
     }
-    (is_ok, not_found)
+    if not_found.is_empty() {
+        Commits::Valid
+    } else {
+        Commits::SomeInvalid(not_found)
+    }
 }
 
 impl Run {

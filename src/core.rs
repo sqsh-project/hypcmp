@@ -89,10 +89,13 @@ enum Commits {
 fn check_validity_of_commit_ids(vec: &[String]) -> Commits {
     debug!("Commits: {vec:?}");
     if vec.iter().any(|s| s == "--all") {
+        // Benchmark should run on all commits
         return Commits::SpecialCaseAll(util::get_abbrev_commit_ids().unwrap());
     } else if vec.iter().any(|s| s == "--branches") {
+        // Benchmark should run on all branches
         return Commits::SpecialCaseAll(util::get_branches().unwrap());
     } else if vec.iter().any(|s| s == "--tags") {
+        // Benchmark should run on all tagged commits
         let vec = util::get_tags().unwrap();
         if vec[0] == "" {
             return Commits::NoTagsFound;
@@ -102,6 +105,7 @@ fn check_validity_of_commit_ids(vec: &[String]) -> Commits {
     } else if vec.iter().any(|s| s.starts_with("--since"))
         || vec.iter().any(|s| s.starts_with("--before"))
     {
+        // Benchmark should run on all commits within two commits (incl.)
         let since = vec
             .iter()
             .find(|&f| f.starts_with("--since"))
@@ -111,27 +115,25 @@ fn check_validity_of_commit_ids(vec: &[String]) -> Commits {
             .find(|&f| f.starts_with("--before"))
             .and_then(|s| s.strip_prefix("--before="));
         return Commits::SpecialCaseAll(util::get_commit_ids_since_before(since, before).unwrap());
-    }
-    let mut cs = util::get_branches().unwrap();
-    let mut ct = util::get_tags().unwrap();
-    let mut csa = util::get_abbrev_commit_ids().unwrap();
-    let mut csb = util::get_commit_ids().unwrap();
-    cs.append(&mut ct); // check first branches + tags
-    cs.append(&mut csa); // then abbreviated commit ids
-    cs.append(&mut csb); // then full commit ids
-    debug!("Commits: {cs:?}");
-    let mut not_found = Vec::new();
-    for v in vec {
-        if cs.iter().any(|s| s == v) {
-            continue;
-        } else {
-            not_found.push(v.clone());
-        }
-    }
-    if not_found.is_empty() {
-        Commits::Valid
     } else {
-        Commits::SomeInvalid(not_found)
+        // Benchmark should run only on given commits (preparation)
+        let mut commits = Vec::new();
+        commits.append(&mut util::get_branches().unwrap());
+        commits.append(&mut util::get_tags().unwrap());
+        commits.append(&mut util::get_abbrev_commit_ids().unwrap());
+        commits.append(&mut util::get_commit_ids().unwrap());
+        let not_found: Vec<_> = vec
+            .iter()
+            .filter(|&c| !commits.iter().any(|s| s == c))
+            .map(|s| s.clone())
+            .collect();
+        if not_found.is_empty() {
+            // Benchmark should run on all commits (all were valid)
+            Commits::Valid
+        } else {
+            // Benchmark should run on all commits (some commits not found)
+            Commits::SomeInvalid(not_found)
+        }
     }
 }
 

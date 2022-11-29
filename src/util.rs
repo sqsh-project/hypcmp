@@ -5,6 +5,7 @@ use std::io::{Error, ErrorKind, Read, Write};
 use std::process::Command;
 use tempfile::TempDir;
 
+/// Remove generated temporary files
 pub(crate) fn cleanup(tempfilelist: Vec<String>, dir: TempDir) -> std::io::Result<()> {
     for file in tempfilelist {
         debug!("Deleting file: {file:?}");
@@ -14,6 +15,7 @@ pub(crate) fn cleanup(tempfilelist: Vec<String>, dir: TempDir) -> std::io::Resul
     dir.close()
 }
 
+/// Check if git state is dirty
 pub(crate) fn is_git_dirty() -> std::io::Result<()> {
     let st = Command::new("git").arg("diff").arg("--quiet").status()?;
     if st.success() {
@@ -26,6 +28,7 @@ pub(crate) fn is_git_dirty() -> std::io::Result<()> {
     }
 }
 
+/// Git: Checkout to specific commit
 pub(crate) fn checkout(commit: String) -> std::io::Result<()> {
     let id = get_current_branch_or_id()?;
     if id != commit {
@@ -44,22 +47,14 @@ pub(crate) fn checkout(commit: String) -> std::io::Result<()> {
     Ok(()) // return HEAD is detached
 }
 
-pub(crate) fn get_current_branch() -> std::io::Result<String> {
-    let r = Command::new("git")
-        .arg("rev-parse")
-        .arg("--abbrev-ref")
-        .arg("HEAD")
-        .output()?
-        .stdout;
-    Ok(to_string(r)) // return HEAD is detached
-}
-
+/// Transform byte vector to string
 pub(crate) fn to_string(msg: Vec<u8>) -> String {
     let mut result = std::str::from_utf8(&msg).unwrap().to_string();
     trim_newline(&mut result);
     result
 }
 
+/// Git: Get current checked out branch or commit
 pub(crate) fn get_current_branch_or_id() -> std::io::Result<String> {
     let mut br = get_current_branch()?;
     trim_newline(&mut br);
@@ -74,16 +69,17 @@ pub(crate) fn get_current_branch_or_id() -> std::io::Result<String> {
     }
 }
 
-pub(crate) fn trim_newline(s: &mut String) {
-    if s.ends_with('\n') {
-        s.pop();
-        if s.ends_with('\r') {
-            s.pop();
-        }
-    }
+fn get_current_branch() -> std::io::Result<String> {
+    let r = Command::new("git")
+        .arg("rev-parse")
+        .arg("--abbrev-ref")
+        .arg("HEAD")
+        .output()?
+        .stdout;
+    Ok(to_string(r)) // return HEAD is detached
 }
 
-pub(crate) fn get_current_commit() -> std::io::Result<String> {
+fn get_current_commit() -> std::io::Result<String> {
     let r = Command::new("git")
         .arg("rev-parse")
         .arg("HEAD")
@@ -92,6 +88,16 @@ pub(crate) fn get_current_commit() -> std::io::Result<String> {
     Ok(to_string(r)) // return HEAD is detached
 }
 
+fn trim_newline(s: &mut String) {
+    if s.ends_with('\n') {
+        s.pop();
+        if s.ends_with('\r') {
+            s.pop();
+        }
+    }
+}
+
+/// Write json object to disk
 pub(crate) fn write_json_to_disk(json: Value) -> std::io::Result<()> {
     let json_pp = serde_json::to_string_pretty(&json)?;
     let mut stdout = std::io::stdout().lock();
@@ -100,6 +106,7 @@ pub(crate) fn write_json_to_disk(json: Value) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Merge several hyperfine result json files to a single result json object
 pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::Value> {
     debug!("Merging files: {files:?}");
     let mut f = File::open(files[0].clone())?;
@@ -123,7 +130,7 @@ pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::
     Ok(result)
 }
 
-pub(crate) fn move_commit_label_to_cmd_name(mut json: Value) -> std::io::Result<serde_json::Value> {
+fn move_commit_label_to_cmd_name(mut json: Value) -> std::io::Result<serde_json::Value> {
     let results = json["results"].as_array_mut().unwrap();
     for run in results {
         let commit = run["parameters"]
@@ -142,6 +149,7 @@ pub(crate) fn move_commit_label_to_cmd_name(mut json: Value) -> std::io::Result<
     Ok(json)
 }
 
+/// Git: Get all valid commit-ids
 pub(crate) fn get_commit_ids() -> Option<Vec<String>> {
     let result = Command::new("git")
         .arg("rev-list")
@@ -157,6 +165,7 @@ pub(crate) fn get_commit_ids() -> Option<Vec<String>> {
     }
 }
 
+/// Git: Get all valid commit-ids since and/or before a specific commit-id
 pub(crate) fn get_commit_ids_since_before(
     since: Option<&str>,
     before: Option<&str>,
@@ -182,6 +191,7 @@ pub(crate) fn get_commit_ids_since_before(
     }
 }
 
+/// Git: Get all valid commit-ids in abbreviated 7-char form
 pub(crate) fn get_abbrev_commit_ids() -> Option<Vec<String>> {
     let result = Command::new("git")
         .arg("rev-list")
@@ -198,6 +208,7 @@ pub(crate) fn get_abbrev_commit_ids() -> Option<Vec<String>> {
     }
 }
 
+/// Git: Get all valid branches
 pub(crate) fn get_branches() -> Option<Vec<String>> {
     let result = Command::new("git")
         .arg("branch")
@@ -213,6 +224,7 @@ pub(crate) fn get_branches() -> Option<Vec<String>> {
     }
 }
 
+/// Check if hyperfine is installed
 pub(crate) fn hyperfine_installed() -> std::io::Result<()> {
     let result = Command::new("which").arg("hyperfine").output()?;
     if !result.status.success() {
@@ -224,6 +236,7 @@ pub(crate) fn hyperfine_installed() -> std::io::Result<()> {
     }
 }
 
+/// Git: Get all valid tags
 pub(crate) fn get_tags() -> Option<Vec<String>> {
     let result = Command::new("git")
         .arg("tag")

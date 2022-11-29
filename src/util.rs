@@ -5,29 +5,6 @@ use std::io::{Error, ErrorKind, Read, Write};
 use std::process::Command;
 use tempfile::TempDir;
 
-/// Remove generated temporary files
-pub(crate) fn cleanup(tempfilelist: Vec<String>, dir: TempDir) -> std::io::Result<()> {
-    for file in tempfilelist {
-        debug!("Deleting file: {file:?}");
-        drop(file)
-    }
-    debug!("Deleting folder: {dir:?}");
-    dir.close()
-}
-
-/// Check if git state is dirty
-pub(crate) fn is_git_dirty() -> std::io::Result<()> {
-    let st = Command::new("git").arg("diff").arg("--quiet").status()?;
-    if st.success() {
-        debug!("Git state is clean");
-        Ok(())
-    } else {
-        error!("Git state is dirty");
-        let err = Error::new(ErrorKind::Other, "Git is dirty");
-        Err(err)
-    }
-}
-
 /// Git: Checkout to specific commit
 pub(crate) fn checkout(commit: String) -> std::io::Result<()> {
     let id = get_current_branch_or_id()?;
@@ -45,13 +22,6 @@ pub(crate) fn checkout(commit: String) -> std::io::Result<()> {
         debug!("Git state not changed");
     }
     Ok(()) // return HEAD is detached
-}
-
-/// Transform byte vector to string
-pub(crate) fn to_string(msg: Vec<u8>) -> String {
-    let mut result = std::str::from_utf8(&msg).unwrap().to_string();
-    trim_newline(&mut result);
-    result
 }
 
 /// Git: Get current checked out branch or commit
@@ -95,58 +65,6 @@ fn trim_newline(s: &mut String) {
             s.pop();
         }
     }
-}
-
-/// Write json object to disk
-pub(crate) fn write_json_to_disk(json: Value) -> std::io::Result<()> {
-    let json_pp = serde_json::to_string_pretty(&json)?;
-    let mut stdout = std::io::stdout().lock();
-    stdout.write_all(json_pp.as_bytes())?;
-    stdout.flush()?;
-    Ok(())
-}
-
-/// Merge several hyperfine result json files to a single result json object
-pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::Value> {
-    debug!("Merging files: {files:?}");
-    let mut f = File::open(files[0].clone())?;
-    let mut buf = String::new();
-    f.read_to_string(&mut buf)?;
-    trace!("Read first file:\n{buf}");
-    let result: serde_json::Value = serde_json::from_str(buf.as_str())?;
-    let mut result = move_commit_label_to_cmd_name(result)?;
-    let result_list = result["results"].as_array_mut().unwrap();
-    for file in files.iter().skip(1) {
-        debug!("Reading file: {file:?}");
-        let mut f = File::open(file)?;
-        let mut buf = String::new();
-        f.read_to_string(&mut buf)?;
-        trace!("Read file: {buf}");
-        let val: serde_json::Value = serde_json::from_str(buf.as_str())?;
-        let mut val = move_commit_label_to_cmd_name(val)?;
-        let r = val["results"].as_array_mut().unwrap();
-        result_list.append(r);
-    }
-    Ok(result)
-}
-
-fn move_commit_label_to_cmd_name(mut json: Value) -> std::io::Result<serde_json::Value> {
-    let results = json["results"].as_array_mut().unwrap();
-    for run in results {
-        let commit = run["parameters"]
-            .as_object()
-            .and_then(|hm| hm.get("commit"));
-        match commit {
-            Some(suff) => {
-                let old_name = run["command"].as_str().unwrap();
-                let suffix = suff.as_str().unwrap();
-                let new_name = [old_name, suffix].join("@");
-                run["command"] = serde_json::Value::String(new_name.to_string());
-            }
-            None => (),
-        }
-    }
-    Ok(json)
 }
 
 /// Git: Get all valid commit-ids
@@ -224,18 +142,6 @@ pub(crate) fn get_branches() -> Option<Vec<String>> {
     }
 }
 
-/// Check if hyperfine is installed
-pub(crate) fn hyperfine_installed() -> std::io::Result<()> {
-    let result = Command::new("which").arg("hyperfine").output()?;
-    if !result.status.success() {
-        let err = Error::new(ErrorKind::Other, "Hyperfine not installed");
-        Err(err)
-    } else {
-        debug!("Hyperfine is installed");
-        Ok(())
-    }
-}
-
 /// Git: Get all valid tags
 pub(crate) fn get_tags() -> Option<Vec<String>> {
     let result = Command::new("git")
@@ -250,4 +156,98 @@ pub(crate) fn get_tags() -> Option<Vec<String>> {
     } else {
         None
     }
+}
+
+/// Git: Check if git status is dirty
+pub(crate) fn is_git_dirty() -> std::io::Result<()> {
+    let st = Command::new("git").arg("diff").arg("--quiet").status()?;
+    if st.success() {
+        debug!("Git state is clean");
+        Ok(())
+    } else {
+        error!("Git state is dirty");
+        let err = Error::new(ErrorKind::Other, "Git is dirty");
+        Err(err)
+    }
+}
+
+/// Check if hyperfine is installed
+pub(crate) fn hyperfine_installed() -> std::io::Result<()> {
+    let result = Command::new("which").arg("hyperfine").output()?;
+    if !result.status.success() {
+        let err = Error::new(ErrorKind::Other, "Hyperfine not installed");
+        Err(err)
+    } else {
+        debug!("Hyperfine is installed");
+        Ok(())
+    }
+}
+
+/// Remove generated temporary files
+pub(crate) fn cleanup(tempfilelist: Vec<String>, dir: TempDir) -> std::io::Result<()> {
+    for file in tempfilelist {
+        debug!("Deleting file: {file:?}");
+        drop(file)
+    }
+    debug!("Deleting folder: {dir:?}");
+    dir.close()
+}
+
+/// Transform byte vector to string
+pub(crate) fn to_string(msg: Vec<u8>) -> String {
+    let mut result = std::str::from_utf8(&msg).unwrap().to_string();
+    trim_newline(&mut result);
+    result
+}
+
+/// Write json object to disk
+pub(crate) fn write_json_to_disk(json: Value) -> std::io::Result<()> {
+    let json_pp = serde_json::to_string_pretty(&json)?;
+    let mut stdout = std::io::stdout().lock();
+    stdout.write_all(json_pp.as_bytes())?;
+    stdout.flush()?;
+    Ok(())
+}
+
+/// Merge several hyperfine result json files to a single result json object
+pub(crate) fn merge_json_files(files: &[String]) -> std::io::Result<serde_json::Value> {
+    debug!("Merging files: {files:?}");
+    let mut f = File::open(files[0].clone())?;
+    let mut buf = String::new();
+    f.read_to_string(&mut buf)?;
+    trace!("Read first file:\n{buf}");
+    let result: serde_json::Value = serde_json::from_str(buf.as_str())?;
+    let mut result = move_commit_label_to_cmd_name(result)?;
+    let result_list = result["results"].as_array_mut().unwrap();
+    for file in files.iter().skip(1) {
+        debug!("Reading file: {file:?}");
+        let mut f = File::open(file)?;
+        let mut buf = String::new();
+        f.read_to_string(&mut buf)?;
+        trace!("Read file: {buf}");
+        let val: serde_json::Value = serde_json::from_str(buf.as_str())?;
+        let mut val = move_commit_label_to_cmd_name(val)?;
+        let r = val["results"].as_array_mut().unwrap();
+        result_list.append(r);
+    }
+    Ok(result)
+}
+
+fn move_commit_label_to_cmd_name(mut json: Value) -> std::io::Result<serde_json::Value> {
+    let results = json["results"].as_array_mut().unwrap();
+    for run in results {
+        let commit = run["parameters"]
+            .as_object()
+            .and_then(|hm| hm.get("commit"));
+        match commit {
+            Some(suff) => {
+                let old_name = run["command"].as_str().unwrap();
+                let suffix = suff.as_str().unwrap();
+                let new_name = [old_name, suffix].join("@");
+                run["command"] = serde_json::Value::String(new_name.to_string());
+            }
+            None => (),
+        }
+    }
+    Ok(json)
 }

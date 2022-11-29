@@ -1,3 +1,4 @@
+use crate::core::Hyperfined;
 use clap::Parser;
 use log::{debug, error, info, trace};
 use std::path::PathBuf;
@@ -42,7 +43,7 @@ fn main() -> std::io::Result<()> {
         debug!("Run: {run:?}");
 
         let mut cmd = Command::new("hyperfine");
-        cmd.args(c.to_hyperfine_params());
+        cmd.args(c.to_hyperfine());
 
         let mut name = vec!["--command-name".to_string()];
         name.push(label.clone());
@@ -55,7 +56,7 @@ fn main() -> std::io::Result<()> {
         json.push(output.clone());
         cmd.args(json);
 
-        cmd.args(run.to_hyperfine_params());
+        cmd.args(run.to_hyperfine());
         info!("Running: {cmd:?}");
 
         let result = cmd.output()?;

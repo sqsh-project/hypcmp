@@ -9,6 +9,11 @@ use log::{debug, error, trace, warn};
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf};
 
+/// Transformation to hyperfine parameters
+pub trait Hyperfined {
+    fn to_hyperfine(&self) -> Vec<String>;
+}
+
 /// Configuration for a complete Benchmark set consisting of several Runs
 #[derive(Deserialize, Debug)]
 pub(crate) struct Benchmark {
@@ -19,10 +24,10 @@ pub(crate) struct Benchmark {
 impl Display for Benchmark {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Common Settings:")?;
-        writeln!(f, "{:?}", self.to_hyperfine_params())?;
+        writeln!(f, "{:?}", self.to_hyperfine())?;
         for (k, v) in self.run.iter() {
             writeln!(f, "Subcommand Settings: {k:?}")?;
-            writeln!(f, "{:?}", v.to_hyperfine_params())?;
+            writeln!(f, "{:?}", v.to_hyperfine())?;
         }
         writeln!(f)
     }
@@ -40,8 +45,11 @@ impl Benchmark {
         let result = toml::from_str(value)?;
         Ok(result)
     }
+}
+
+impl Hyperfined for Benchmark {
     /// Return common configuration of the Benchmark
-    pub(crate) fn to_hyperfine_params(&self) -> Vec<String> {
+    fn to_hyperfine(&self) -> Vec<String> {
         self.hyperfine_params.clone()
     }
 }
@@ -150,9 +158,9 @@ fn check_correctness_of_commit_ids(vec: &[String]) -> Commits {
     }
 }
 
-impl Run {
+impl Hyperfined for Run {
     /// Return custom-part of `hyperfine` configuration of Run
-    pub(crate) fn to_hyperfine_params(&self) -> Vec<String> {
+    fn to_hyperfine(&self) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
         match (&self.shell, &self.commits, &self.setup) {
             (Some(_), Some(_), Some(_)) => {

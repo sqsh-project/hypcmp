@@ -1,6 +1,6 @@
 [package]
 name = "hypcmp"
-version = "0.3.2"
+version = "0.3.3"
 authors =  ["Ugur Cayoglu <cayoglu@me.com>"]
 edition = "2021"
 description = "Extension to run hyperfine with toml files w/ commit switches."

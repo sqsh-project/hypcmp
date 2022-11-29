@@ -64,6 +64,7 @@ pub(crate) struct Run {
     prepare: Option<String>,
     setup: Option<String>,
     shell: Option<String>,
+    annotations: Option<HashMap<String, String>>,
     command: String,
 }
 

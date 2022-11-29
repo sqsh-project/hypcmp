@@ -10,13 +10,13 @@ mod util;
 /// Command-line Interface (CLI) for the hypcmp library
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
-pub struct Cli {
+struct Cli {
     /// Configuration file [*.toml]
     #[clap(value_parser)]
-    pub config: PathBuf,
+    config: PathBuf,
 
     #[clap(flatten)]
-    pub verbose: clap_verbosity_flag::Verbosity,
+    verbose: clap_verbosity_flag::Verbosity,
 }
 
 fn main() -> std::io::Result<()> {

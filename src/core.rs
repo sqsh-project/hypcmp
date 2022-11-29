@@ -1,8 +1,15 @@
+//! # Benchmark and Runs
+//! This module defines the two main components of the application: Benchmark and Runs.
+//!
+//! A Benchmark defines the complete hyperfine setup. It consists of individual
+//! and shared configurations between Runs. A Run is defined as a single timed
+//! command by `hyperfine`.
 use crate::util;
 use log::{debug, error, trace, warn};
 use serde::Deserialize;
 use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf};
 
+/// Configuration for a complete Benchmark set consisting of several Runs
 #[derive(Deserialize, Debug)]
 pub(crate) struct Benchmark {
     hyperfine_params: Vec<String>,
@@ -22,6 +29,7 @@ impl Display for Benchmark {
 }
 
 impl Benchmark {
+    /// Setup Benchmark from a toml configuration file
     pub(crate) fn from_config(config: PathBuf) -> std::io::Result<Self> {
         debug!("Reading configuration file: {config:?}");
         let mut f = File::open(config)?;
@@ -32,11 +40,13 @@ impl Benchmark {
         let result = toml::from_str(value)?;
         Ok(result)
     }
+    /// Return common configuration of the Benchmark
     pub(crate) fn to_hyperfine_params(&self) -> Vec<String> {
         self.hyperfine_params.clone()
     }
 }
 
+/// A timed run executed by `hyperfine`
 #[derive(Deserialize, Debug)]
 pub(crate) struct Run {
     #[serde(default)]
@@ -49,6 +59,7 @@ pub(crate) struct Run {
     command: String,
 }
 
+/// Custom deserialization function for commits checking for correctness of commit-ids
 fn from_commit<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -56,7 +67,7 @@ where
     let s: Option<Vec<String>> = serde::Deserialize::deserialize(deserializer)?;
 
     match s {
-        Some(vec) => match check_validity_of_commit_ids(&vec) {
+        Some(vec) => match check_correctness_of_commit_ids(&vec) {
             Commits::Valid => Ok(Some(vec)),
             Commits::SpecialCaseAll(vec) => {
                 debug!("Running on {vec:?}");
@@ -79,6 +90,7 @@ where
     }
 }
 
+/// Possible states after checking of entered commits
 enum Commits {
     Valid,
     NoTagsFound,
@@ -86,7 +98,8 @@ enum Commits {
     SomeInvalid(Vec<String>),
 }
 
-fn check_validity_of_commit_ids(vec: &[String]) -> Commits {
+/// Checking correctness of commit ids
+fn check_correctness_of_commit_ids(vec: &[String]) -> Commits {
     debug!("Commits: {vec:?}");
     if vec.iter().any(|s| s == "--all") {
         // Benchmark should run on all commits
@@ -138,6 +151,7 @@ fn check_validity_of_commit_ids(vec: &[String]) -> Commits {
 }
 
 impl Run {
+    /// Return custom-part of `hyperfine` configuration of Run
     pub(crate) fn to_hyperfine_params(&self) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
         match (&self.shell, &self.commits, &self.setup) {

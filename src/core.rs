@@ -181,12 +181,14 @@ impl Hyperfined for Run {
             }
             None => (),
         }
-        match &self.cleanup {
-            Some(cmd) => {
+        match (&self.cleanup, &self.annotations) {
+            (Some(cmd), Some(hm)) => unimplemented!(),
+            (None, Some(hm)) => unimplemented!(),
+            (Some(cmd), None) => {
                 result.push("--cleanup".to_string());
                 result.push(cmd.clone());
             }
-            None => (),
+            (None, None) => (),
         }
         match &self.prepare {
             Some(cmd) => {

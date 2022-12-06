@@ -85,7 +85,7 @@ fn main() -> std::io::Result<()> {
     } else {
         let json = util::merge_json_files(&files_to_be_merged)?;
         util::write_json_to_disk(json)?;
-        util::cleanup(files_to_be_merged, dir)?;
+        // util::cleanup(files_to_be_merged, dir)?;
         util::checkout(current_branch)?;
     }
     Ok(())

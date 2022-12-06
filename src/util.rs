@@ -255,7 +255,7 @@ fn move_commit_label_to_cmd_name(mut json: Value) -> std::io::Result<serde_json:
 /// Generate jq command to manipulate `hyperfine` result json
 pub fn generate_jq_cmd(key: &str, cmd: &str, json: &str) -> String {
     format!(
-        "jq --arg {0} $({1}) '.results[0].{0}=${0}' {2}",
+        "jq --arg {0} $({1}) '.results[0].{0}=${0}' {2} > {2}",
         key, cmd, json
     )
 }

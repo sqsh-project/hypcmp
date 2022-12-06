@@ -57,7 +57,10 @@ fn main() -> std::io::Result<()> {
         cmd.args(name);
 
         // Add run specific arguments
-        cmd.args(run.to_hyperfine());
+        match &run.annotations {
+            Some(hm) => cmd.args(run.to_hyperfine_with_json_and_annotations(&output, hm)),
+            None => cmd.args(run.to_hyperfine()),
+        };
         info!("Running: {cmd:?}");
 
         // Execute command

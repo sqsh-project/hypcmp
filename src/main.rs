@@ -42,23 +42,25 @@ fn main() -> std::io::Result<()> {
     for (label, run) in c.run.iter() {
         debug!("Run: {run:?}");
 
+        // Initiate `hyperfine` command
         let mut cmd = Command::new("hyperfine");
-        cmd.args(c.to_hyperfine());
 
+        // Add json output to arguments
+        let mut filename = label.clone();
+        filename.push_str(".json");
+        let output = dir.path().join(filename).display().to_string();
+        cmd.args(c.to_hyperfine_with_json(&output));
+
+        // Add command name to arguments
         let mut name = vec!["--command-name".to_string()];
         name.push(label.clone());
         cmd.args(name);
 
-        let mut json = vec!["--export-json".to_string()];
-        let mut filename = label.clone();
-        filename.push_str(".json");
-        let output = dir.path().join(filename).display().to_string();
-        json.push(output.clone());
-        cmd.args(json);
-
+        // Add run specific arguments
         cmd.args(run.to_hyperfine());
         info!("Running: {cmd:?}");
 
+        // Execute command
         let result = cmd.output()?;
         if result.status.success() {
             debug!("Benchmark run successful");

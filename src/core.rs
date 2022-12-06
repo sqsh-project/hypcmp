@@ -12,6 +12,14 @@ use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf}
 /// Transformation to hyperfine parameters
 pub trait Hyperfined {
     fn to_hyperfine(&self) -> Vec<String>;
+    fn to_hyperfine_with_json(&self, json: &str) -> Vec<String> {
+        let mut params = self.to_hyperfine();
+        params.push("--export-json".to_string());
+        params.push(json.to_string());
+        params
+    }
+    // fn to_hyperfine_with_annotations(&self, annotations: &str) -> Vec<String>;
+    // fn to_hyperfine_with_json_and_annotations(&self, json: &str, annotations: &str) -> Vec<String>;
 }
 
 /// Configuration for a complete Benchmark set consisting of several Runs

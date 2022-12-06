@@ -19,18 +19,19 @@ pub trait Hyperfined {
         params
     }
     fn to_hyperfine_with_json_and_annotations(&self, json: &str, kw: &HashMap<String, String>) -> Vec<String> {
-        let mut params = self.to_hyperfine_with_json(json);
+        let mut params = self.to_hyperfine();
         let mut annotations: Vec<_> = kw.iter().map(|(k, v)| util::generate_jq_cmd(&k, &v, json)).collect();
         match &params.iter().position(|x| x == &"--cleanup".to_string()) {
             Some(ix) => {
                 // Cleanup used in command and annotations must be prepand
                 annotations.push(params.get(ix+1).unwrap().clone());
-                params.insert(ix + 1, annotations.join("&&"));
+                params.insert(ix + 1, annotations.join(" && "));
+                params.remove(ix + 2);
             },
             None => {
                 // Cleanup not used, annotations can be added as cleanup
                 params.push("--cleanup".to_string());
-                params.push(annotations.join("&&"));
+                params.push(annotations.join(" && "));
             }
         }
         params

@@ -251,3 +251,26 @@ fn move_commit_label_to_cmd_name(mut json: Value) -> std::io::Result<serde_json:
     }
     Ok(json)
 }
+
+/// Generate jq command to manipulate `hyperfine` result json
+pub fn generate_jq_cmd(key: &str, cmd: &str, json: &str) -> String {
+    format!(
+        "jq --arg {0} $({1}) '.results[0].{0}=${0}' {2} > {2}",
+        key, cmd, json
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn jq() {
+        let key = "filesize";
+        let cmd = "ls -al /tmp/Cargo.toml.dd | awk '{{print $5}}'";
+        let json = "out.json";
+        let expected = "jq --arg filesize $(ls -al /tmp/Cargo.toml.dd | awk '{{print $5}}') '.results[0].filesize=$filesize' out.json";
+
+        assert_eq!(expected, generate_jq_cmd(key, cmd, json))
+    }
+}

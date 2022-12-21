@@ -12,6 +12,30 @@ use std::{collections::HashMap, fmt::Display, fs::File, io::Read, path::PathBuf}
 /// Transformation to hyperfine parameters
 pub trait Hyperfined {
     fn to_hyperfine(&self) -> Vec<String>;
+    fn to_hyperfine_with_json(&self, json: &str) -> Vec<String> {
+        let mut params = self.to_hyperfine();
+        params.push("--export-json".to_string());
+        params.push(json.to_string());
+        params
+    }
+    fn to_hyperfine_with_json_and_annotations(&self, json: &str, kw: &HashMap<String, String>) -> Vec<String> {
+        let mut params = self.to_hyperfine();
+        let mut annotations: Vec<_> = kw.iter().map(|(k, v)| util::generate_jq_cmd(&k, &v, json)).collect();
+        match &params.iter().position(|x| x == &"--cleanup".to_string()) {
+            Some(ix) => {
+                // Cleanup used in command and annotations must be prepand
+                annotations.push(params.get(ix+1).unwrap().clone());
+                params.insert(ix + 1, annotations.join(" && "));
+                params.remove(ix + 2);
+            },
+            None => {
+                // Cleanup not used, annotations can be added as cleanup
+                params.push("--cleanup".to_string());
+                params.push(annotations.join(" && "));
+            }
+        }
+        params
+    }
 }
 
 /// Configuration for a complete Benchmark set consisting of several Runs
@@ -64,6 +88,7 @@ pub(crate) struct Run {
     prepare: Option<String>,
     setup: Option<String>,
     shell: Option<String>,
+    pub annotations: Option<HashMap<String, String>>,
     command: String,
 }
 

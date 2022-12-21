@@ -41,6 +41,10 @@ setup = "which ls"
 shell = "none"
 command = "dd if={ifile} of=/tmp/Cargo.toml.dd"
 
+[run.dd.annotations]
+filesize = "ls -al /tmp/Cargo.toml.dd | awk '{{print $5}}'"
+modified = "ls -al /tmp/Cargo.toml.dd | awk '{{print $6\" \"$7\" \"$8}}'"
+
 [run.cp]
 command = "cp {ifile} /tmp/Cargo.toml.cp"
 

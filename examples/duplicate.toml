@@ -1,7 +1,7 @@
 # Common `hyperfine` parameters.
-# The following settings are shared by all runs defined in the next section.
-# Most commonly here are the setups `run`, `warmup` and `parameter-lists` shared
-# by each individual run.
+# The following settings are shared by all runs.
+# Most commonly here are the setups for `run`, `warmup` and `parameter-lists` shared
+# by each individual run. The following options are available:
 #
 # - `run`: Number of executions of each individual run
 # - `warmup`: Number of executions of each individual run for cache warmup
@@ -20,13 +20,13 @@ hyperfine_params = [
 # - `commits`: List of commit-ids to be run for each command
 #   + Allowed are branches, tags, full and 7-char commit-ids
 #   + Special case flags:
-#       * `--all` runs command on all commits using 7-char commit-ids
-#       * `--branches` runs command on all branches
-#       * `--tags` runs command on all tags
-#       * `--since=<commit-id>` runs command on all commits since specific commit-id (incl.)
-#       * `--before=<commit-id>` runs command on all commits before specific commit-id (incl.)
-#    + Special case flags `--since` and `--before` can be combined
-#    + Special case flags take preference to other tags, branches or commit-ids given
+#      * `--all` runs command on all commits using 7-char commit-ids
+#      * `--branches` runs command on all branches
+#      * `--tags` runs command on all tags
+#      * `--since=<commit-id>` runs command on all commits since specific commit-id (incl.)
+#      * `--before=<commit-id>` runs command on all commits before specific commit-id (incl.)
+#   + Special case flags `--since` and `--before` can be combined
+#   + Special case flags take preference to other tags, branches or commit-ids given
 # - `cleanup`: Command to be executed after all timed runs are done
 # - `prepare`: Command to be executed before **each** timing run
 # - `setup`: Command to be executed before all timed runs are initiated
